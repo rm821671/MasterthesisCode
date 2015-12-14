@@ -8,7 +8,8 @@
 **/
 
 
-
+#include <ctime>
+#include <sstream>
 
 #include "TROOT.h"
 #include "TChain.h"
@@ -30,7 +31,7 @@
 
 
 //#include "TreeParticles.hpp"
-#include "../../CMSSW_7_4_12/src/TreeWriter/TreeWriter/plugins/TreeParticles.hpp"
+#include "../../cms_sw/CMSSW_7_4_12/src/TreeWriter/TreeWriter/plugins/TreeParticles.hpp"
 
 /*******************************************************************************************
  * TreeParticles.hpp
@@ -45,67 +46,67 @@
 
 namespace tree
 {
-   struct Particle
-   {
-      TVector3 p;
-      Float_t  someTestFloat=0.; // only for quick peeking
-   };
+	struct Particle
+	{
+		TVector3 p;
+		Float_t  someTestFloat=0.; // only for quick peeking
+	};
 
-   struct GenParticle: public Particle
-   {
-      Int_t pdgId=0;
-   };
+	struct GenParticle: public Particle
+	{
+		Int_t pdgId=0;
+	};
 
-   struct Photon : public Particle
-   {
-      Float_t sigmaIetaIeta; // full 5x5
-      Float_t hOverE;
-      Int_t hasPixelSeed;
-      Int_t passElectronVeto;
-      Float_t r9;
+	struct Photon : public Particle
+	{
+		Float_t sigmaIetaIeta; // full 5x5
+		Float_t hOverE;
+		Int_t hasPixelSeed;
+		Int_t passElectronVeto;
+		Float_t r9;
 
-      Float_t isoChargedHadronsEA;
-      Float_t isoNeutralHadronsEA;
-      Float_t isoPhotonsEA;
-      Float_t isoWorstChargedHadrons;
+		Float_t isoChargedHadronsEA;
+		Float_t isoNeutralHadronsEA;
+		Float_t isoPhotonsEA;
+		Float_t isoWorstChargedHadrons;
 
-      Int_t isTrue;
-      Int_t isTrueAlternative;
+		Int_t isTrue;
+		Int_t isTrueAlternative;
 
-      // IDs
-      Bool_t  isLoose;
-      Bool_t  isMedium;
-      Bool_t  isTight;
-      Float_t mvaValue;
-   };
+		// IDs
+		Bool_t  isLoose;
+		Bool_t  isMedium;
+		Bool_t  isTight;
+		Float_t mvaValue;
+	};
 
-   struct Jet : public Particle
-   {
-      bool isLoose;
-      float bDiscriminator;
-   };
+	struct Jet : public Particle
+	{
+		bool isLoose;
+		float bDiscriminator;
+	};
 
-   struct Muon: public Particle
-   {
-      bool isTight;
-   };
+	struct Muon: public Particle
+	{
+		bool isTight;
+	};
 
-   struct Electron: public Particle
-   {
-      bool isLoose;
-      bool isMedium;
-      bool isTight;
-   };
+	struct Electron: public Particle
+	{
+		bool isLoose;
+		bool isMedium;
+		bool isTight;
+	};
 
-   struct MET : public Particle
-   {
-      TVector3 p_raw;
-      Float_t  uncertainty;
-   };
+	struct MET : public Particle
+	{
+		TVector3 p_raw;
+		Float_t  uncertainty;
+	};
 
-   inline bool EtGreater(const tree::Particle p1, const tree::Particle p2) {
-      return p1.p.Pt() > p2.p.Pt();
-   }
+	inline bool EtGreater(const tree::Particle p1, const tree::Particle p2) {
+		return p1.p.Pt() > p2.p.Pt();
+	}
 
 } // end namespace definition
 #endif // TREEPARTICLES_H 
@@ -115,6 +116,7 @@ namespace tree
 // */
 // namespace stuff
 using namespace tree;
+using namespace std;
 
 /*******************************************************************************************
  * 
@@ -129,9 +131,58 @@ template <typename T> int sign(T val) {
       return (T(0) < val) - (val < T(0));
 }
 
+// convert numer to string
+template <typename T> string NumberToString ( T Number ) {
+      ostringstream ss;
+      ss << Number;
+      return ss.str();
+  }
+
+
+// create output file name depending on input tree
+string getOutputFilename( string strIn ) {
+
+  // Converts "/path/to/ntuple/QCD_nTuple.root" to "QCD_hists.root"
+
+  auto PosStart = strIn.rfind("/");
+  auto PosEnd = strIn.find(".root");
+  string outputName;
+  
+  if( PosEnd != string::npos ) {
+    outputName = "../selector_rootFiles/my_selector_results_" + 
+    				strIn.substr( PosStart+1, PosEnd-PosStart-1 ) + 
+    				"_" + 
+    				NumberToString(time(0)) +
+    				".root";
+  }
+  return outputName;
+
+}
 
 
 
+
+/*
+ * 
+ * function to count Ng and Ne per bin for f=Ng/(Ne+Ng)
+ * to calculate fake rate dependency on variables
+ * 
+ ************************************************/ 
+
+/*
+	void Histogrammer::Count_Pt(float Pt, float Ng_, float Ne_){
+		
+		for(int i=0; i<20;i++){
+			if(Pt>=(i*10) && Pt<(i+1)*10){
+				
+				Ng["Pt"].at(i) += Ng_;
+				Ne["Pt"].at(i) += Ne_;
+				
+			}
+		}
+		
+	}
+// */
 
 
 
@@ -168,8 +219,6 @@ class Histogrammer : public TSelector {
 		void fillBkgEst( string const& s );
 		
 		
-		//void Count_Pt(float Pt, float Ng, float Ne);
-		
 		
 		
 
@@ -188,11 +237,9 @@ class Histogrammer : public TSelector {
 		TTreeReaderValue<Float_t> genHt;
 
 		TTreeReaderValue<Int_t> nGoodVertices;
+		TTreeReaderValue<Int_t> nChargedPfCandidates;
 		TTreeReaderValue<Int_t> nPV;
 		TTreeReaderValue<Int_t> genLeptonsFromW;
-		
-		
-		
 
 		TTreeReaderValue<ULong64_t> eventNo;
 		TTreeReaderValue<UInt_t> runNo;
@@ -348,6 +395,7 @@ Histogrammer::Histogrammer():
 	genParticles( fReader, "genParticles" ),
 	met( fReader, "met" ),
 	nGoodVertices( fReader, "nGoodVertices" ),
+	//nChargedPfCandidates( fReader, "nChargedPfCandidates" ),
 	w_pu( fReader, "pu_weight" ),
 	
 	genHt( fReader, "genHt"),
@@ -427,8 +475,8 @@ void Histogrammer::initSelection( string const& s ) {
 	h["f_JetSize_passed"] = TH1F(("f_JetSize_passed_"+s).c_str(),";N_{jets};counts",40,0,40);
 	
 	// fakerate in dependency of eta
-	h["f_Eta_total"] = TH1F(("f_Eta_total_"+s).c_str(),";#eta;counts",100,0,2.5);
-	h["f_Eta_passed"] = TH1F(("f_Eta_passed_"+s).c_str(),";#eta;counts",100,0,2.5);
+	h["f_Eta_total"] = TH1F(("f_Eta_total_"+s).c_str(),";|#eta|;counts",200,0,5);
+	h["f_Eta_passed"] = TH1F(("f_Eta_passed_"+s).c_str(),";|#eta|;counts",200,0,5);
 
 	// fakerate in dependency of gen Ht
 	h["f_met_total"] = TH1F(("f_met_total_"+s).c_str(),";#slash{E}_{T} [GeV];counts",100,0,500);
@@ -473,50 +521,66 @@ void Histogrammer::initSelection( string const& s ) {
 	h["f_met_raw_total"].Sumw2();
 	h["f_met_raw_passed"].Sumw2();
 	
-	
-	
-	
-	
 	h["delR"] = TH1F(("delR_"+s).c_str(),";#Delta R;a.u.",50,0,10);
 	h["delR"].Sumw2();
-
+	
+	
+	// *********************************************************************************************
+	// 
+	// 
+	h["Zmass_fit_total_sig_noBin"] = TH1F(("Zmass_fit_total_sig_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_total_bkg_noBin"] = TH1F(("Zmass_fit_total_bkg_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_total_bkg2_noBin"] = TH1F(("Zmass_fit_total_bkg2_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_total_bkg3_noBin"] = TH1F(("Zmass_fit_total_bkg3_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_total_sig_noBin"].Sumw2();
+	h["Zmass_fit_total_bkg_noBin"].Sumw2();
+	h["Zmass_fit_total_bkg2_noBin"].Sumw2();
+	h["Zmass_fit_total_bkg3_noBin"].Sumw2();
+	
+	
+	h["Zmass_fit_passed_sig_noBin"] = TH1F(("Zmass_fit_passed_sig_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_passed_bkg_noBin"] = TH1F(("Zmass_fit_passed_bkg_noBin_"+s).c_str(),";m [GeV];counts",400,0,200);
+	h["Zmass_fit_passed_sig_noBin"].Sumw2();
+	h["Zmass_fit_passed_bkg_noBin"].Sumw2();
+	
+	
 	// TH2F (const char *name, const char *title, 
 	//	Int_t nbinsx, Double_t xlow, Double_t xup, 
 	//	Int_t nbinsy, Double_t ylow, Double_t yup)
 	h2["delR_plane"] = TH2F(("delR_plane_"+s).c_str(),";#Delta #phi;#Delta #eta",
-					100,-7.,7.,
-					200,-10,10);
+					400,-7.,7.,
+					800,-10,10);
+					
+	h2["PhiEtaPlane_total"] = TH2F(("PhiEtaPlane_total_"+s).c_str(),";#Delta #phi;#Delta #eta",
+					400,-7.,7.,
+					800,-10,10);
 	
+	h2["PhiEtaPlane_passed"] = TH2F(("PhiEtaPlane_passed_"+s).c_str(),";#Delta #phi;#Delta #eta",
+					400,-7.,7.,
+					800,-10,10);
 	
+	h2["PhiEtaPlaneZoom_total"] = TH2F(("PhiEtaPlaneZoom_total_"+s).c_str(),";#Delta #phi;#Delta #eta",
+					200,-1.,1.,
+					200,-1,1);
 	
+	h2["PhiEtaPlaneZoom_passed"] = TH2F(("PhiEtaPlaneZoom_passed_"+s).c_str(),";#Delta #phi;#Delta #eta",
+					200,-1.,1.,
+					200,-1,1);
+					
 	
-	
+	h2["f_NtrkPt_total"] = TH2F(("f_NtrkPt_total_"+s).c_str(),";p_{T} [GeV];N_{trk}",
+					200,0,200,
+					250,0,250);
+
+	h2["f_NtrkPt_passed"] = TH2F(("f_NtrkPt_passed_"+s).c_str(),";p_{T} [GeV];N_{trk}",
+					200,0,200,
+					250,0,250);
 	
 	
 	fOutput->AddAll(gDirectory->GetList());
 	
 } // init selection
 
-
-/*******************************************************************************************
- * 
- * function to count Ng and Ne per bin für f=Ng/(Ne+Ng)
- * to calculate fake rate dependency on variables
- *
- ************************************************/ /*
-void Histogrammer::Count_Pt(float Pt, float Ng_, float Ne_){
-	
-	for(int i=0; i<20;i++){
-		if(Pt>=(i*10) && Pt<(i+1)*10){
-			
-			Ng["Pt"].at(i) += Ng_;
-			Ne["Pt"].at(i) += Ne_;
-			
-		}
-	}
-	
-}
-// */
 
 /*******************************************************************************************
  * 
@@ -662,8 +726,6 @@ void Histogrammer::SlaveBegin(TTree *tree_)
 
 
 
-
-
 /*******************************************************************************************
  * 
  * process.
@@ -671,169 +733,202 @@ void Histogrammer::SlaveBegin(TTree *tree_)
  ************************************************/
 Bool_t Histogrammer::Process(Long64_t entry)
 {
-	if(Nnum < 10000){		
-		
-		//if(Nnum<10) cout << Nnum << " Process()-"; // << endl;
-		
-		resetSelection();
-		
-		fReader.SetEntry(entry);
-		
-		
-		//cout << "-"<<entry;		
-
-		// set weight
-		//selW = sign(*w_mc);
-		
-		//float Nvertices; // number of vertices
-		//Nvertices = nGoodVertices;	
-/*		
-		// scan photon objects per event		
-		for(auto& p: photons){
-						
-			selPhotons.push_back(&p);
-			vTemp1 = vTemp1 + p.p;	// summed photon momentum
-			Etemp1 += p.p.Mag();	// summed photon energy
-									
-		}
-
-		// scan jets per event
-		for(auto& j: jets){
-			Htjets += j.p.Pt();
-
-		}
-		
-		//scan electron objects per event
-		for(auto& e: electrons){
+	if(Nnum > 100000) return kTRUE;
 			
-			selElectrons.push_back(&e);
 	
-		} //
+	//if(Nnum<10) cout << Nnum << " Process()-"; // << endl;
+	
+	resetSelection();
+	
+	fReader.SetEntry(entry);	// fReader on current entry
+	
+	
+	//cout << "-"<<entry;		
 
-		// scan muon objects per event
-		for(auto& m: muons){
-			
-			selMuons.push_back(&m);
+	// set weight
+	//selW = sign(*w_mc);
+	
+	//float Nvertices; // number of vertices
+	//Nvertices = nGoodVertices;	
+/*		
+	// scan photon objects per event		
+	for(auto& p: photons){
+					
+		selPhotons.push_back(&p);
+		vTemp1 = vTemp1 + p.p;	// summed photon momentum
+		Etemp1 += p.p.Mag();	// summed photon energy
+								
+	}
+
+	// scan jets per event
+	for(auto& j: jets){
+		Htjets += j.p.Pt();
+
+	}
+	
+	//scan electron objects per event
+	for(auto& e: electrons){
 		
+		selElectrons.push_back(&e);
+
+	} //
+
+	// scan muon objects per event
+	for(auto& m: muons){
+		
+		selMuons.push_back(&m);
+	
+	}
+	
+	// set lorentzvector from the sum of momentum three vectors and energy, respectively
+	lvTemp1.SetVect(vTemp1);// summed momentum
+	lvTemp1.SetE(Etemp1);	// summed energy
+		
+	if(lvTemp1.M()>1) h["m_gg_all"].Fill(lvTemp1.M());	// photon candidate probes, "gg" = eg
+	if(lvTemp2.M()>1) h["m_eg_all"].Fill(lvTemp2.M());	// all probes,		  "eg" = eg + ee
+	
+	// only final states with 2 photon like objects
+	if(selPhotons.size()==2){
+					
+		h["m_gg"].Fill(lvTemp1.M());
+		h["met_eg_all"].Fill(met->p_raw.Mag());
+		
+		// either one or the other has NO pixel seed
+		if( 	(selPhotons[0]->hasPixelSeed && !selPhotons[1]->hasPixelSeed) || 	
+			(selPhotons[1]->hasPixelSeed && !selPhotons[0]->hasPixelSeed)
+			){
+
+			oneHasNoPixelSeed = true;	// control variable for pixelseed veto
+							
+			h["m_eg"].Fill(lvTemp1.M());				
+			h["met_eg"].Fill(met->p_raw.Mag());
+			
+			// pT of the electron proxy objects (
+			if(selPhotons[0]->hasPixelSeed) h["pt_eg"].Fill(selPhotons[0]->p.Pt());
+			else if(selPhotons[1]->hasPixelSeed) h["pt_eg"].Fill(selPhotons[1]->p.Pt());
+
 		}
 		
-		// set lorentzvector from the sum of momentum three vectors and energy, respectively
-		lvTemp1.SetVect(vTemp1);// summed momentum
-		lvTemp1.SetE(Etemp1);	// summed energy
+		// ptcut25 for at least one object, ptcut10 for the other
+		if(	(selPhotons[0]->p.Pt()>25. && selPhotons[1]->p.Pt()>10.) ||
+			(selPhotons[0]->p.Pt()>10. && selPhotons[1]->p.Pt()>25.)
+			){
 			
-		if(lvTemp1.M()>1) h["m_gg_all"].Fill(lvTemp1.M());	// photon candidate probes, "gg" = eg
-		if(lvTemp2.M()>1) h["m_eg_all"].Fill(lvTemp2.M());	// all probes,		  "eg" = eg + ee
-		
-		// only final states with 2 photon like objects
-		if(selPhotons.size()==2){
-						
-			h["m_gg"].Fill(lvTemp1.M());
-			h["met_eg_all"].Fill(met->p_raw.Mag());
+			// invariant mass
+			h["m_eg_ptcut25"].Fill(lvTemp1.M());				// all probes, "eg" = eg + ee
 			
-			// either one or the other has NO pixel seed
-			if( 	(selPhotons[0]->hasPixelSeed && !selPhotons[1]->hasPixelSeed) || 	
-				(selPhotons[1]->hasPixelSeed && !selPhotons[0]->hasPixelSeed)
-				){
+			
+			// Ht from jets
+			h["Htjets_eg_ptcut25"].Fill(Htjets);				// all probes, "eg" = eg + ee
 
-				oneHasNoPixelSeed = true;	// control variable for pixelseed veto
-								
-				h["m_eg"].Fill(lvTemp1.M());				
-				h["met_eg"].Fill(met->p_raw.Mag());
-				
-				// pT of the electron proxy objects (
-				if(selPhotons[0]->hasPixelSeed) h["pt_eg"].Fill(selPhotons[0]->p.Pt());
-				else if(selPhotons[1]->hasPixelSeed) h["pt_eg"].Fill(selPhotons[1]->p.Pt());
-
+			if(oneHasNoPixelSeed) {
+				h["m_gg_ptcut25"].Fill(lvTemp1.M());	// photon candidate probes, "gg" = eg
+				h["Htjets_gg_ptcut25"].Fill(Htjets);	// photon candidate probes, "gg" = eg
 			}
 			
-			// ptcut25 for at least one object, ptcut10 for the other
-			if(	(selPhotons[0]->p.Pt()>25. && selPhotons[1]->p.Pt()>10.) ||
-				(selPhotons[0]->p.Pt()>10. && selPhotons[1]->p.Pt()>25.)
-				){
-				
-				// invariant mass
-				h["m_eg_ptcut25"].Fill(lvTemp1.M());				// all probes, "eg" = eg + ee
-				
-				
-				// Ht from jets
-				h["Htjets_eg_ptcut25"].Fill(Htjets);				// all probes, "eg" = eg + ee
+		}
+					
+	} // two photon objects
+			
+	// met
+	h["met_all"].Fill(met->p_raw.Mag());
+	
+	//wpu = *w_pu;
 
-				if(oneHasNoPixelSeed) {
-					h["m_gg_ptcut25"].Fill(lvTemp1.M());	// photon candidate probes, "gg" = eg
-					h["Htjets_gg_ptcut25"].Fill(Htjets);	// photon candidate probes, "gg" = eg					
+	// number of "good" vertices per event
+	h["Nvtx"].Fill(*nGoodVertices);
+	
+	//h["Nvtx"].Fill(w_pu);
+	//
+*/
+	// *******************************************************************************
+	// *******************************************************************************
+	// tag and probe in the double photon data set ***********************************
+	//
+	
+	// RESET
+	resetSelection();
+	
+	bool	TagElectron = false,
+		ProbePhoton = false;
+		
+	int	Nphotons_nocut = 0,
+		Nphotons_cut = 0;
+		
+	int	Ng_temp=0,
+		Ne_temp=0;
+	
+	float 	epsilonP = 0.1; //maximum difference between two absolute momenta
+				 // to distinguisch originally same objects
+				 // (in GeV)
+				 
+	float	delR_p_gene = 0,	// dR photon object <-> generated electron
+		delR_e_gene = 0;
+	
+	bool	oneDelRmatch = false;
+	 
+	float 	epPt_temp=0;
+	
+	S_mZdiff_m mz_m1, mz_m2;
+	
+	float 	Ptcut_El = 25.; // 25GeV as cut
+	
+/*		deltaR	 = sqrt(	(genp.p.Phi()-p.p.Phi())*(genp.p.Phi()-p.p.Phi()) + 
+		    		(genp.p.Eta()-p.p.Eta())*(genp.p.Eta()-p.p.Eta()) 
+		    		);
+				
+*/
+	
+	// *******************************************************************************
+	// simple fake rate: f=Ng/(Ne+Ng)
+	// count Ng and Ne
+	bool matchToPF = false;
+	bool gotoNextPhoton = false;
+	
+	for(auto& p: photons){ // loop photon objects
+		
+		vTemp1 = vTemp1 + p.p;	// summed photon momentum
+		Etemp1 += p.p.Mag();	// summed photon energy
+	
+		gotoNextPhoton = false;
+		
+		for(auto& genp: genParticles){ // per photon object loop gen particles
+			if( (genp.pdgId == 11) || (genp.pdgId == -11)){ // if electron or positron
+				Ntest2 += 1;
+				
+				// TH2F.Fill (Double_t x, Double_t y)
+				h2["delR_plane"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+				h["delR"].Fill(genp.p.DeltaR(p.p));
+				
+				if(p.p.Pt() > 30. && fabs(p.p.Eta()) < 1.4442){ // fake rate in the plane
+					if(!p.hasPixelSeed){
+						h2["PhiEtaPlane_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+						h2["PhiEtaPlane_passed"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+						
+						h2["PhiEtaPlaneZoom_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+						h2["PhiEtaPlaneZoom_passed"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+						
+					}
+					if(p.hasPixelSeed){
+						h2["PhiEtaPlane_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+						h2["PhiEtaPlaneZoom_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+					}
 				}
 				
-			}
-						
-		} // two photon objects
+				if(genp.p.DeltaR(p.p) <0.2 && p.p.Pt() >30.){
+					if(!p.hasPixelSeed){
+						h["f_Eta_total"].Fill(fabs(p.p.Eta()));
+						h["f_Eta_passed"].Fill(fabs(p.p.Eta()));
+					}
+					if(p.hasPixelSeed){
+						h["f_Eta_total"].Fill(fabs(p.p.Eta()));
+					}
+				}
 				
-		// met
-		h["met_all"].Fill(met->p_raw.Mag());
-		
-		//wpu = *w_pu;
-
-		// number of "good" vertices per event
-		h["Nvtx"].Fill(*nGoodVertices);
-		
-		//h["Nvtx"].Fill(w_pu);
-		//
-*/
-		// *************************************************************************************************************************
-		// *************************************************************************************************************************
-		// tag and probe in the double photon data set *****************************************************************************
-		//
-		
-		// RESET
-		resetSelection();
-		
-		bool	TagElectron = false,
-			ProbePhoton = false;
-			
-		int	Nphotons_nocut = 0,
-			Nphotons_cut = 0;
-			
-		int	Ng_temp=0,
-			Ne_temp=0;
-		
-		float 	epsilonP = 0.1; //maximum difference between two absolute momenta
-					 // to distinguisch originally same objects
-					 // (in GeV)
-					 
-		float	delR_p_gene = 0,	// dR photon object <-> generated electron
-			delR_e_gene = 0;
-		
-		bool	oneDelRmatch = false;
-		 
-		float 	epPt_temp=0;
-		
-		S_mZdiff_m mz_m1, mz_m2;
-		
-		float 	Ptcut_El = 25.; // 25GeV as cut
-		
-/*		deltaR	 = sqrt(	(genp.p.Phi()-p.p.Phi())*(genp.p.Phi()-p.p.Phi()) + 
-			    		(genp.p.Eta()-p.p.Eta())*(genp.p.Eta()-p.p.Eta()) 
-			    		);
-					
-*/
-		
-
-		
-		// simple fake rate: f=Ng/(Ne+Ng)
-		// count Ng and Ne
-		for(auto& p: photons){ // loop photon objects
-			
-				
-			for(auto& genp: genParticles){ // per photon object loop gen particles
-				if( (genp.pdgId == 11) || (genp.pdgId == -11)){ // if electron or positron
-					Ntest2 += 1;
-					
-					// TH2F.Fill (Double_t x, Double_t y)
-					h2["delR_plane"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
-					h["delR"].Fill(genp.p.DeltaR(p.p));
-					
-					if(genp.p.DeltaR(p.p) <0.2 && /*p.p.Pt() > 30. &&*/ fabs(p.p.Eta()) < 1.4442 ){
-						
-						
+				if(!gotoNextPhoton){ // if, for any chance, the delR requirement is fullfilled
+						// more than one time, this makes sure not to count
+						// photon objects twice
+					if(genp.p.DeltaR(p.p) <0.2 && p.p.Pt() > 30. && fabs(p.p.Eta()) < 1.4442 ){
 						if(!p.hasPixelSeed  ){	
 							Ng_1 +=1;
 										
@@ -843,62 +938,124 @@ Bool_t Histogrammer::Process(Long64_t entry)
 							h["f_Nvtx_total"].Fill(*nGoodVertices);
 							h["f_Nvtx_passed"].Fill(*nGoodVertices);
 							
-							
 							h["f_JetSize_total"].Fill(jets.GetSize());
 							h["f_JetSize_passed"].Fill(jets.GetSize());
 							
-							h["f_Eta_total"].Fill(p.p.Eta());
-							h["f_Eta_passed"].Fill(fabs(p.p.Eta()));
-														
 							h["f_met_total"].Fill(met->p.Pt());
 							h["f_met_passed"].Fill(met->p.Pt());
-	
-							//h["f_HLTph90_total"] = TH1F(("f_HLTph90_total_"+s).c_str(),";#eta;counts",2,0,2);
-							//h["f_HLTph90_passed"] = TH1F(("f_HLTph90_passed_"+s).c_str(),";#eta;counts",2,0,2);
+							
+							//h2["f_NtrkPt_total"].Fill(p.p.Pt(),*nChargedPfCandidates);
+							//h2["f_NtrkPt_passed"].Fill(p.p.Pt(),*nChargedPfCandidates);
+							
+							//h2["PhiEtaPlane_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
+							//h2["PhiEtaPlane_passed"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
 							
 						}
 						if(p.hasPixelSeed){
 							Ne_1 +=1;
-							
 								
 							h["f_Pt_total"].Fill(p.p.Pt());
 							h["f_Nvtx_total"].Fill(*nGoodVertices);
 							h["f_JetSize_total"].Fill(jets.GetSize());
-							h["f_Eta_total"].Fill(fabs(p.p.Eta()));
+							
 							h["f_genHt_total"].Fill(*genHt);
 							h["f_met_total"].Fill(met->p.Mag());
+							
+							//h2["f_NtrkPt_total"].Fill(p.p.Pt(),*nChargedPfCandidates);		
+							//h2["PhiEtaPlane_total"].Fill(genp.p.Phi()-p.p.Phi(),genp.p.Eta()-p.p.Eta());
 						}
-						goto nextPhoton;	// if, for any chance, the delR requirement is fullfilled
-									// more than one time, this goto makes sure not to count
-									// photon objects twice
+						//goto nextPhoton;
+						gotoNextPhoton = true;
 					}
 				}
-			} // genparticle loop
-			nextPhoton:
-			// Count_Pt(float Pt, int Ng, int Ne)
-			
-			
-			Ntest4 += 1;
-			
-		} // photon loop
-		
-		if(Nnum==4){
-			for(auto& p: photons) cout << "p.Pt() = " << p.p.Pt() << endl;
-			for(auto& g: genParticles){
-				if(fabs(g.pdgId) == 11) cout << "gen.Pt() = " << g.p.Pt() << endl;
 			}
-		} 
+		} // genparticle loop
+		// nextPhoton:
 		
-		//cout << Nnum << "\t" << Ng_1 << "\t" << Ne_1 << endl;
 		
+		
+		
+		
+	} // photon loop
+	
+	// *********************************************************************************************
+	// try to seperate signal and background by simple assumptions:
+	//	use all events with 2 photon objects
+	//	- both photons match to gen particles: "signal"
+	//	- else: "background"
+	
+	// set lorentzvector from the sum of momentum three vectors and energy, respectively
+	lvTemp1.SetVect(vTemp1);// summed momentum
+	lvTemp1.SetE(Etemp1);	// summed energy
+	
+	int nPhoton = 0;
+	bool 	photon1 = false, photon2 = false, // match variables
+			hasPixelSeed1 = false, hasPixelSeed2 = false; // pixelseed
+	if(photons.GetSize() == 2){
+		for(auto& p: photons){
+			nPhoton += 1;
+			for(auto& genp: genParticles){
+				if(genp.p.DeltaR(p.p) <0.2 && p.p.Pt() > 30.){
+					
+					if(nPhoton == 1){ 
+						if(p.hasPixelSeed) hasPixelSeed1 = true;
+						photon1 = true;
+						}
+					if(nPhoton == 2){
+						if(p.hasPixelSeed) hasPixelSeed2 = true;
+						photon2 = true;
+						}
+						
+					goto nextPhoton; // do not count photons twice
+					
+				}
+			}
+		nextPhoton:
+		Ntest1 += 1;
+		}
+	}
+	
+	if(photon1 && photon2){
+		h["Zmass_fit_total_sig_noBin"].Fill(lvTemp1.M());
+		if( (hasPixelSeed1 && !hasPixelSeed2) || (!hasPixelSeed1 && hasPixelSeed2) ){
+			h["Zmass_fit_passed_sig_noBin"].Fill(lvTemp1.M());
+			}
+		Ntest2 += 1; 
+	}
+	
+	if( (photon1  && !photon2) || (!photon1 && photon2) ){ // || (!photon1 && !photon2) ){
+		
+		if(photon1 && !photon2) h["Zmass_fit_total_bkg_noBin"].Fill(lvTemp1.M());
+		if(!photon1 && photon2) h["Zmass_fit_total_bkg2_noBin"].Fill(lvTemp1.M());
+		if( (hasPixelSeed1 && !hasPixelSeed2) || (!hasPixelSeed1 && hasPixelSeed2) ){
+			h["Zmass_fit_passed_bkg_noBin"].Fill(lvTemp1.M());
+			}
+		Ntest3 += 1;
+	}
+	
+	if(!photon1 && !photon2){
+		h["Zmass_fit_total_bkg3_noBin"].Fill(lvTemp1.M());
+		Ntest4 += 1;
+	}
+	
+/*	
+	if(Nnum==4){
+		for(auto& p: photons) cout << "p.Pt() = " << p.p.Pt() << " and p.Eta() = " << p.p.Eta() << endl;
+		for(auto& g: genParticles){
+			if(fabs(g.pdgId) == 11) cout << "gen.Pt() = " << g.p.Pt() << endl;
+		}
+	} 
+*/		
+	//cout << Nnum << "\t" << Ng_1 << "\t" << Ne_1 << endl;
 	
 
 
 
-		// comment this out to get whole tree analyzed:
-		//Nnum +=1 ;
 
-	} //  if(Nnum< ) ******************************************************************************************/
+	// comment this out to get whole tree analyzed:
+	Nnum +=1 ;
+
+	
 
 	
 	
@@ -963,20 +1120,45 @@ void Histogrammer::Terminate()
 	//eff["Pt"].SetDirectory(gDirectory);
 	//fOutput->AddAll(gDirectory->GetList());
 	
+	auto outputName = getOutputFilename( fReader.GetTree()->GetCurrentFile()->GetName() );
 	
-		
-	TFile hfile("my_selector_results_delR01.root","RECREATE");
+	cout << "results written in: " << outputName << endl;
+	
+	TFile file( outputName.c_str(), "RECREATE");
+	
+	//TFile hfile("../rootFiles/my_selector_results_mcDY_1446802738.root","RECREATE");
+	
+	
+	//TFile hfile("../rootFiles/my_selector_results_DY_delR_cut.root","RECREATE");
 	//TFile hfile("my_selector_results_DY_FullSim.root","RECREATE");
 	
-
-		
-	fOutput->Write(); // write all objects; used by PROOF
 	
-	 
-   
-
-
+// */
+	fOutput->Write(); // write all objects; used by PROOF	
 } // terminate
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

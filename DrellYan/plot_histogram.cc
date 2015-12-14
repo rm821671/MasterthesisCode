@@ -75,14 +75,16 @@ void plot_histogram(){
 
 	TGaxis::SetMaxDigits(3); // digits per axis, meaning xxxEy e.g. 1.00e03
 	
-	string infile="my_selector_results_delR01.root";
+	//string infile="../rootFiles/my_selector_results_mcDY_1446802738.root";
+	//string infile="../rootFiles/my_selector_results_.root";
+	string infile="../rootFiles/my_selector_results_DY_delR_cut.root";
 	//string infile="my_selector_results_DY_FullSim.root";
 	
 
 
 	TFile *f = new TFile(infile.c_str());
 
-	
+	cout << "step1" << endl;
 	/*
 	TList *l = f->GetList();
 
@@ -159,9 +161,14 @@ void plot_histogram(){
 	TH1F* h32 = (TH1F*)f->Get("delR_test");
 	TH2F* h33 = (TH2F*)f->Get("delR_plane_test");
 	
+	TH2F* h34 = (TH2F*)f->Get("PhiEtaPlane_total_test");
+	TH2F* h35 = (TH2F*)f->Get("PhiEtaPlane_passed_test");
 	
-
+	TH2F* h36 = (TH2F*)f->Get("PhiEtaPlaneZoom_total_test");
+	TH2F* h37 = (TH2F*)f->Get("PhiEtaPlaneZoom_passed_test");
 	
+	//TH2F* h38 = (TH2F*)f->Get("f_NtrkPt_total_test");
+	//TH2F* h39 = (TH2F*)f->Get("f_NtrkPt_passed_test");
 	
 
 	
@@ -175,8 +182,7 @@ void plot_histogram(){
 	TEfficiency* eff1 =0;
 	// TEfficiency(const TH1& passed,const TH1& total) 
 	if(TEfficiency::CheckConsistency(*h21, *h20)){
-		eff1 = new TEfficiency(*h21, *h20);
-		
+		eff1 = new TEfficiency(*h21, *h20);		
 	}
 	
 	TEfficiency* eff2 =0;
@@ -213,6 +219,29 @@ void plot_histogram(){
 		eff6 = new TEfficiency(*h31, *h30);
 		
 	}
+	
+	
+	// 2d efficiency
+	TEfficiency* eff7 =0;
+	// TEfficiency(const TH1& passed,const TH1& total) 
+	if(TEfficiency::CheckConsistency(*h35, *h34)){
+		eff7 = new TEfficiency(*h35, *h34);
+	}
+	
+	// 2d efficiency
+	TEfficiency* eff8 =0;
+	// TEfficiency(const TH1& passed,const TH1& total) 
+	if(TEfficiency::CheckConsistency(*h37, *h36)){
+		eff8= new TEfficiency(*h37, *h36);
+	}
+	/*
+	// 2d efficiency
+	TEfficiency* eff9 =0;
+	// TEfficiency(const TH1& passed,const TH1& total) 
+	if(TEfficiency::CheckConsistency(*h39, *h38)){
+		eff9= new TEfficiency(*h39, *h38);
+	}
+	*/
 
 	// 
 	// 
@@ -287,7 +316,7 @@ void plot_histogram(){
 	// ************************************************************************************
 	// c2
 	
-	TCanvas* c2 = new TCanvas("c2","",1700,1100);
+//	TCanvas* c2 = new TCanvas("c2","",1700,1100);
 /*	
 	h10->SetLineColor(kRed);
 	h11->SetLineColor(kBlue);
@@ -313,7 +342,9 @@ void plot_histogram(){
 	h19->SetLineColor(kBlue); // nocut
 	h18->SetLineWidth(2);
 	h19->SetLineWidth(2);
-*/	
+*/
+
+/*	
 	h20->SetLineColor(kRed); 
 	h21->SetLineColor(kBlue); 
 	h20->SetLineWidth(2);
@@ -349,24 +380,30 @@ void plot_histogram(){
 	// Njets
 	TF1* feff3 = new TF1("feff3","[0]+[1]*x",0,25);
 	
+	// bottom left: x=0, y=0
+	// bottom right: x=1, y=0
+	// top right: x=1, y=1
 	//  TText TText(Double_t x, Double_t y, const char* text)
-	TText* t1 = new TText(100.,0.05,"p0+p1/x+p2/x^2");
+	TText* t1 = new TText(0.3,0.8,"p0+p1/x+p2/x^2");
 	t1->SetTextAlign(22);
 	t1->SetTextFont(43);
 	t1->SetTextSize(20);
 	t1->SetTextColor(kBlack);
+	t1->SetNDC(kTRUE);
 	
-	TText* t2 = new TText(15.,0.03,"p0+p1*x");
+	TText* t2 = new TText(0.3,0.8,"p0+p1*x");
 	t2->SetTextAlign(22);
 	t2->SetTextFont(43);
 	t2->SetTextSize(20);
 	t2->SetTextColor(kBlack);
+	t2->SetNDC(kTRUE);
 	
-	TText* t3 = new TText(15.,0.03,"p0+p1*x");
+	TText* t3 = new TText(0.3,0.8,"p0+p1*x");
 	t3->SetTextAlign(22);
 	t3->SetTextFont(43);
 	t3->SetTextSize(20);
 	t3->SetTextColor(kBlack);
+	t3->SetNDC(kTRUE);
 	
 	
 	TGraphAsymmErrors* geff1 = eff1->CreateGraph();
@@ -375,7 +412,14 @@ void plot_histogram(){
 	TGraphAsymmErrors* geff4 = eff4->CreateGraph();
 	TGraphAsymmErrors* geff5 = eff5->CreateGraph();
 	TGraphAsymmErrors* geff6 = eff6->CreateGraph();
+*/	
+	TH2* heff7 = eff7->CreateHistogram();
+	heff7->SetTitle("fakerate in dPhi dEta plane");
+	
+	TH2* heff8 = eff8->CreateHistogram();
+	heff8->SetTitle("fakerate in dPhi dEta plane zoomed");
 		
+/*		
 	geff1->GetYaxis()->SetTitle("fakerate");
 	geff2->GetYaxis()->SetTitle("fakerate");
 	geff3->GetYaxis()->SetTitle("fakerate");
@@ -387,11 +431,11 @@ void plot_histogram(){
 	//geff1->SetMinimum(0.);
 	geff1->SetMaximum(0.1); // y axis range maximum
 	
-	geff2->SetMinimum(0.015);
-	geff2->SetMaximum(0.035); // y axis range maximum
+	geff2->SetMinimum(0.0);
+	geff2->SetMaximum(0.02); // y axis range maximum
 	
-	geff3->SetMinimum(0.015);
-	geff3->SetMaximum(0.035); // y axis range maximum
+	geff3->SetMinimum(0.0);
+	geff3->SetMaximum(0.02); // y axis range maximum
 	
 	
 	//feff1->SetParameter(2,14);
@@ -453,8 +497,8 @@ void plot_histogram(){
 	c2->SaveAs("c2.root");
 	//c2->Close();
 	
-	// */
-
+// */
+/*
 	// ************************************************************************************
 	// c3
 	TCanvas* c3 = new TCanvas("c3","",1700,1100);
@@ -486,7 +530,7 @@ void plot_histogram(){
 	leg31->DrawClone("same");
 	
 	c3->cd(4);
-	geff4->DrawClone("AP*");		
+	geff4->DrawClone("AP*");
 
 	c3->cd(2);
 	h28->DrawClone("hist");
@@ -503,9 +547,9 @@ void plot_histogram(){
 	//
 	// 
 	//fit_tool(h11,c2);
-	// */
+// */
 
-
+/*
 	// ************************************************************************************
 	// c4
 	TCanvas* c4 = new TCanvas("c4","",600,600);
@@ -536,12 +580,85 @@ void plot_histogram(){
 	c6->cd(1);	
 	h32->DrawClone("hist");
 	
-	c6->cd(2);
-	h33->DrawClone();
+	
+	// ************************************************************************************
+	// c7
+	h33->SetTitle("all photons to all genP");
+	TCanvas* c7 = new TCanvas("c7","",1400,700);
+	c7->Divide(2,1);
+	c7->cd(1);
+	gPad->SetRightMargin(0.15);	
+	gPad->SetLogz();	// logarithmic
+	h33->DrawClone("colz");
+		
+	c7->cd(2);
+	gPad->SetLogz();
+	h33->DrawClone("lego");
+*/	
+	// ************************************************************************************
+	// c8
+	TCanvas* c8 = new TCanvas("c8","",600,600);
+	c8->cd();
+	gPad->SetRightMargin(0.15);	
+	gPad->SetLogz();	// logarithmic
+	heff7->DrawClone("colz"); // fakerate delR plane
+	
+	// ************************************************************************************
+	// c9
+	h34->SetTitle("total");	
+	TCanvas* c9 = new TCanvas("c9","",600,600);
+	c9->cd();
+	gPad->SetRightMargin(0.15);
+	gPad->SetLogz();
+	h34->DrawClone("colz");
+	
+	// ************************************************************************************
+	// c10
+	h35->SetTitle("passed");	
+	TCanvas* c10 = new TCanvas("c10","",600,600);
+	c10->cd();
+	gPad->SetRightMargin(0.15);
+	gPad->SetLogz();
+	h35->DrawClone("colz");
+
+	// ************************************************************************************
+	// c11
+	TCanvas* c11 = new TCanvas("c11","",600,600);
+	c11->cd();
+	gPad->SetRightMargin(0.15);
+	gPad->SetLogz();
+	heff8->DrawClone("colz"); // fakerate delR plane, zoomed -1 to 1
+
+/*
+	// ************************************************************************************
+	// c12
+	TH2* heff9 = eff9->CreateHistogram();
+	heff9->SetTitle("fakerate");
+	
+	TCanvas* c12 = new TCanvas("c12","",600,600);
+	c12->cd();
+	gPad->SetRightMargin(0.15);
+	//gPad->SetLogz();
+	heff9->DrawClone("surf4"); // fakerate Pt, Ntrk
+	// --
+	// -- --
+	// -- -- --
+	
+	// ************************************************************************************
+	// c13
+		
+	TCanvas* c13 = new TCanvas("c13","",1200,600);
+	c13->Divide(2,1);
+	c13->cd(1);
+	gPad->SetRightMargin(0.15);
+	h38->DrawClone("colz");
+	c13->cd(2);
+	gPad->SetRightMargin(0.15);
+	h39->DrawClone("colz");
+	
 
 
-
-	// */	
+// */	
 	 
 }	// plot_histogram()
 
