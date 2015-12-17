@@ -47,11 +47,12 @@ class HistoCollection(object):
 	'''
 	def __init__(self):
 		self.count = 0
-		self.his = {}
+		self.h = {}
 	
 	
 	def add(self,TH):
 		self.count += 1
+		
 		
 	
 	def plotlist(self):
@@ -68,18 +69,137 @@ class HistoCollection(object):
 
 class myCanvas(object):
 	'''
-	some canvas options
+	create a canvas
+	
 	'''
-	def __init__(self,opt):
-		self.opt = opt
+	def __init__(self,name):
+		self.opt = 0
+		
+		self.rat = 0.3
+		
+		self.cwidth = 800
+		self.cheight = 900
+		
+		self.cname = name
+		
+		# ranges for the x axis
+		self.xmin = -1
+		self.xmax = 0
+		
+		#self.legend = TLegend(0.9,0.7,0.65,0.9)
+		
 	
 	#def create(self):
 	#	return TCanvas("name","name",800,900)
+	
+	def createCanvas(self, legend):
+		self.l = legend
+		
+		self.htem = self.data.Clone("htem")
+		self.htem.SetMinimum(-(self.htem.GetMaximum()/10.))
+		
+		self.createRatio()
+		
+		#self.f1 = self.ratio.getOneline()
+		if(self.xmin != -1 and self.xmax != 0):
+			self.mc.GetXaxis().SetRange(self.xmin, self.xmax)
+			self.data.GetXaxis().SetRange(self.xmin, self.xmax)
+			self.htem.GetXaxis().SetRange(self.xmin, self.xmax)
+			#self.stack.GetXaxis().SetRange(self.xmin, self.xmax)
+		
+		self.c = TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
+		self.pad1 = TPad("pad1","pad1",0,self.rat,1,1)
+		self.pad2 = TPad("pad2","pad2",0,0,1,self.rat)
+		self.pad1.SetBottomMargin(0)
+		self.pad2.SetTopMargin(0)
+		
+		self.pad1.Draw()
+		self.pad1.cd()
+		
+
+		
+		if(self.data.GetMaximum() > self.mc.GetMaximum()):
+			print "data>mc"
+			#self.htem = self.data.Clone()
+			#self.htem.SetMinimum(-(self.htem.GetMaximum()/10.))
+			self.htem.Draw("ep")
+			
+			
+			#self.data.SetMinimum(-(self.data.GetMaximum()/10.))
+			#self.data.Draw("ep")
+			self.stack.Draw("same hist")
+			self.data.Draw("same ep")
+		else:
+			print "mc>data"
+			self.mc.SetMinimum(-(self.mc.GetMaximum()/10.))
+			self.mc.Draw("hist")
+			self.stack.Draw("same hist")
+			self.data.Draw("same ep")
+			
+		self.l.Draw("same")
+		
+		self.c.cd()
+		
+		self.pad2.Draw()
+		self.pad2.cd()
+		self.ratio.getHis().Draw("ep")
+		self.ratio.getOneline().Draw("same")
+		
+		self.c.cd()
+	
+	def addMC(self,h):
+		# needs a THStack
+		# "last" is the stacked histogram
+		self.stack = h
+		self.mc = h.GetStack().Last()
+		
+	
+	
+	def addData(self,h):
+		# needs a histogram
+		self.data = h
+		
+		self.data.SetMarkerStyle(20)
+	
+	
+	def createRatio(self):
+		# ratio of MC/Data
+		self.ratio = Ratio(self.mc,self.data)
+		
+		if(self.xmin != -1 and self.xmax != 0):
+			self.ratio.xmin = self.xmin
+			self.ratio.xmax = self.xmax
+		
+		
+	def plotOrder(self):
+		n1 = self.data.GetMaximum()
+		n2 = self.mc.GetMaximum()
+		if(n1>n2):
+			return n1, n2 # first draw data
+		else:
+			return n2, n1 # first draw mc
+		
+	
+	def Styles(self):
+		pass
+	
+	
+	def getCanvas(self):
+		return self.c
+	
+	
+	def savePlot(self):
+		
+		
+		
+		
+		return 0
 	
 
 
 class myCanvasRatio(myCanvas):
 	'''
+	OLD
 	special canvas with ration plot
 	'''
 	def __init__(self,THhis,THratio, opt):
@@ -87,8 +207,6 @@ class myCanvasRatio(myCanvas):
 		self.ratio = THratio
 		myCanvas.__init__(self,opt)
 		
-		
-	
 	
 	
 	def pads(self, rat):
@@ -99,10 +217,9 @@ class myCanvasRatio(myCanvas):
 		self.pad2.SetBottomMargin(0)
 		
 		
-		
 	
 	
-	def _create(self):
+	def create(self):
 		
 		self._c = TCanvas("_c","_c",800,900)
 		self.pads(0.3)
@@ -111,11 +228,7 @@ class myCanvasRatio(myCanvas):
 		self.pad1.cd()
 		
 		
-		
-	
-	
-	
-	
+
 
 
 
@@ -138,26 +251,27 @@ class Ratio(object):
 		self.c1 = 1
 		self.c2 = 1
 		
-		self.ymin = 0.5 # standard range
+		self.ymin = 0.0 # standard range
 		self.ymax = None
 		
-		self.xmin = self.num.GetXaxis().GetXmin()
-		self.xmax = self.num.GetXaxis().GetXmax()
+		self.__xmin = self.num.GetXaxis().GetXmin()
+		self.__xmax = self.num.GetXaxis().GetXmax()
+		
+		self.xmin = self.__xmin
+		self.xmax = self.__xmax
 		
 		self.nbins = self.num.GetNbinsX()
 		self.name = self.num.GetName()
 		#self.title = self.name + ";" + self.xtitle + ";" + self.ytitle
-		self.title = ";ratio;" + self.numtitle
+		self.title = ";" + self.numtitle + ";ratio"
 		
 		
 		self.hisratio = 0
-		
-	
 	
 	
 	def initRatio(self):
 		
-		self.hisratio = TH1F(self.name,self.title,self.nbins,self.xmin,self.xmax)
+		self.hisratio = TH1F(self.name,self.title,self.nbins,self.__xmin,self.__xmax)
 		
 	
 	def setOpt(self):
@@ -168,6 +282,10 @@ class Ratio(object):
 			self.ymax = 1.5
 		self.hisratio.SetMinimum(self.ymin)
 		self.hisratio.SetMaximum(self.ymax)
+		
+		
+		#self.hisratio.GetXaxis().SetRange(self.xmin, self.xmax)
+
 		#self.hisratio.GetXaxis().SetLimits(self.xmin,self.xmax)
 		# x range:
 		
@@ -181,21 +299,22 @@ class Ratio(object):
 								self.den,
 								self.c1,
 								self.c2)
-		
+	
 	def rebin(self,c_):
 		self.hisratio.Rebin(c_)
-	
 	
 	def getHis(self):
 		self.initRatio()
 		self.division()
 		self.setOpt()
 		return self.hisratio
+		
+	def getOneline(self):
+		self.f1 = TF1("f1","1.",self.__xmin,self.__xmax)
+		self.f1.SetLineWidth(1)
+		return self.f1
 	
 	def hisdraw(self):
-		#self.getHis()
-		#c.cd()
-		#self.hisratio.Draw("ep")
 		pass
 	
 
@@ -206,10 +325,27 @@ class Eff(object):
 	'''
 	for efficiency objects
 	'''
-	def __init__(self,TH1passed,TH1total):
-		self.hpassed = TH1passed
-		self.htotal = TH1total
+	def __init__(self, name):
+		self.var = 0
 		
+		self.ymin = 0
+		self.ymax = 0.05 # 
+		
+		self.cwidth = 800
+		self.cheight = 800
+		
+		self.cname = name
+		
+		self.graph = 0
+		self.ffit = 0
+	
+	def addPassed(self,h):
+		self.hpassed = h
+	
+	def addTotal(self, h):
+		self.htotal = h
+	
+	def Graph(self):
 		if(TEfficiency.CheckConsistency(self.hpassed,
 										self.htotal)):
 			print("consistency checked")
@@ -217,15 +353,53 @@ class Eff(object):
 									self.htotal)
 			
 			self.graph = self.eff.CreateGraph()
+			
+			#return self.graph
 		else:
 			print("not consistent")
 	
-	def Graph(self):
-		# 1d histograms: returns tgraphasymmerrors
-		# 2d histograms: returns histogram
+	def getGraph(self):
+		if self.graph == 0:
+			self.Graph()
+		
 		return self.graph
 	
+	def fit(self,func):
+		self.ffit = func
+		if self.graph == 0:
+			self.Graph()
+		
+		self.graph.Fit(self.ffit,"r")
+		
 	
+	
+	def Canvas(self):
+		'''
+		 get a canvas with the efficiency
+		'''
+		if self.graph == 0:
+			self.Graph()
+		
+		self.graph.SetTitle(self.cname)
+		self.graph.SetMinimum(self.ymin)
+		self.graph.SetMaximum(self.ymax)
+		
+		self.c = TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
+		self.c.cd()
+		self.graph.Draw("ap")
+		if self.ffit != 0:
+			self.ffit.Draw("same")
+		
+		
+		
+	
+	
+
+
+
+
+
+
 class GraphText(object):
 	def __init__(self,lum):
 		self.lum = lum
@@ -440,10 +614,11 @@ def giveCrossSectionMC(key):
 	'''
 	returns lumi in pb
 	'''
-	cs = {	"DYJetsToLL": 6104.,
-				"TTGJets": 3.697,
-				"WGToLNuG": 489.,
-				"ZGTo2LG": 117.864
+	cs = {		"DYJetsToLL": 6025.2, # NLO
+				# "DYJetsToLL": 6104., # LO
+				"TTGJets": 3.697, # NLO
+				"WGToLNuG": 489., # NLO
+				"ZGTo2LG": 117.864 # NLO
 			}
 	for k in cs.keys():
 		if key in k:
@@ -456,8 +631,8 @@ def giveLumiData(key):
 	'''
 	returns lumi in pb-1
 	'''
-	lumi = {	"Run2015-05Oct2015": 2.11e3,		# originally in fb
-				"Run2015-PromptReco": 2.11e3		# originally in fb
+	lumi = {	"Run2015-05Oct2015": 2.11e3,		# originally in fb-1
+				"Run2015-PromptReco": 2.11e3		# originally in fb-1
 			}
 	#or k in lumi.keys():
 	#	if key in k:

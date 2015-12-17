@@ -598,6 +598,10 @@ void Histogrammer::initSelection( string const& s ) {
 	
 	
 	
+	hname = "diphoton_excess";
+	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2000,0,2000);
+	
+	
 	
 	// TH2F (const char *name, const char *title, 
 	//	Int_t nbinsx, Double_t xlow, Double_t xup, 
@@ -860,7 +864,7 @@ void Histogrammer::SlaveBegin(TTree *tree_)
 Bool_t Histogrammer::Process(Long64_t entry)
 {
 	// comment this out to get whole tree analyzed:
-	if(Nnum > 1000000) return kTRUE;
+	//if(Nnum > 1000000) return kTRUE;
 	
 	string numstr;
 	string hname;
@@ -933,7 +937,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	}
 	
 	
-	if(photons.GetSize() >= 2 && numberPhoton40 >= 2 && *TriggerR9Id85){
+	if(photons.GetSize() == 2 && numberPhoton40 >= 2 && *TriggerR9Id85){
 		hname = "diphotonraw_photon_pt";
 		for(auto& p: photons){
 			
@@ -955,7 +959,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 		
 		lvTemp1.SetVect(vTemp1);// summed momentum
 		lvTemp1.SetE(Etemp1);	// summed energy
-		hname = "diphotonZpeak_jet_pt";
+		hname = "diphotonZpeak_jet_pt"; // this is the photon pt!
 		h[hname].Fill(lvTemp1.M(), selW);
 	}
 	
@@ -992,7 +996,8 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	bool	tag1 = false, probe1 = false,
 			tag2 = false, probe2 = false;
 	
-
+	
+	
 	
 	
 	resetSelection();
@@ -1004,10 +1009,17 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	// set lorentzvector from the sum of momentum three vectors and energy, respectively
 	lvTemp1.SetVect(vTemp1);// summed momentum
 	lvTemp1.SetE(Etemp1);	// summed energy
-
+	
 	// use events with two photons
-	if(photons.GetSize() == 2){
+	if(photons.GetSize() == 2 && *TriggerR9Id85){
 	Ncounts[6] ++;
+	
+	
+	hname = "diphoton_excess";
+	h[hname].Fill(lvTemp1.M(),selW);
+	
+	
+	
 		if(electrons.GetSize() == 2){
 			Ncounts[5]++;
 			
@@ -1018,6 +1030,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 					for(auto& e: electrons){
 						h2name = "h2_2e2g_delR";
 						hname = "h_2e2g_delR";
+						
 						h[hname].Fill(p.p.DeltaR(e.p), selW);
 						h2[h2name].Fill(p.p.DeltaPhi(e.p), p.p.Eta()-e.p.Eta(), selW);
 						
@@ -1042,41 +1055,45 @@ Bool_t Histogrammer::Process(Long64_t entry)
 					
 						if(nPhoton == 1){
 							Ncounts[2] ++;
-						
+							
 							tag1 = true;
 							}
 						if(nPhoton == 2){
 							Ncounts[3] ++;
-						
+							
 							tag2 = true;
 							}				
-						goto nextPhoton; // do not count photons twice
+						goto nextPhoton; // do not count both photons as tag
 					}
 			
 				nextPhoton:
 				Ncounts[0] += 1;
 			}
-		
-		
+			
+			
 			//h2name = "fZmass_h2_tot_pt";
 			//h2name = "fZmass_h2_pas_pt";
-		
+			
 			// probe
 			if(tag1 || tag2){
 			Ncounts[7] ++;
+			
+			
+			
 				if(tag1 && photons[1].p.Pt() > 10. && fabs(photons[1].p.Eta())<1.4442){				
 					Ncounts[1] += 1;
-				
+					
 					h2name = "fZmass_h2_tot_pt";
 					h2[h2name].Fill(lvTemp1.M(), photons[1].p.Pt(), selW);
-				
+					
 					h2name = "fZmass_h2_tot_nvtx";
 					h2[h2name].Fill(lvTemp1.M(), *nGoodVertices, selW);
-				
+					
 					h2name = "fZmass_h2_tot_njet";
 					h2[h2name].Fill(lvTemp1.M(), jets.GetSize(), selW);
-				
-				
+					
+					
+					
 					if(!photons[1].hasPixelSeed){
 						Ncounts[8]++;
 						h2name = "fZmass_h2_pas_pt";
@@ -1088,21 +1105,21 @@ Bool_t Histogrammer::Process(Long64_t entry)
 						h2name = "fZmass_h2_pas_njet";
 						h2[h2name].Fill(lvTemp1.M(), jets.GetSize(), selW);
 					}
-			
+				
 				}
-			
+				
 				if(tag2 && photons[0].p.Pt() > 10. && fabs(photons[0].p.Eta())<1.4442){
 					Ncounts[1]+=1;
-				
+					
 					h2name = "fZmass_h2_tot_pt";
-					h2[h2name].Fill(lvTemp1.M(), photons[0].p.Pt(), selW);
-				
+					h2[h2name].Fill(lvTemp1.M(), photons[1].p.Pt(), selW);
+					
 					h2name = "fZmass_h2_tot_nvtx";
 					h2[h2name].Fill(lvTemp1.M(), *nGoodVertices, selW);
-				
+					
 					h2name = "fZmass_h2_tot_njet";
 					h2[h2name].Fill(lvTemp1.M(), jets.GetSize(), selW);
-				
+					
 					if(!photons[0].hasPixelSeed){
 						h2name = "fZmass_h2_pas_pt";
 						h2[h2name].Fill(lvTemp1.M(), photons[0].p.Pt(), selW);
@@ -1146,9 +1163,8 @@ void Histogrammer::SlaveTerminate()
 	// have been processed. When running with PROOF SlaveTerminate() is called
 	// on each slave server.
 	
+	
 	cout << "\nSlaveTerminate()" << endl;
-	
-	
 	
 	
 }

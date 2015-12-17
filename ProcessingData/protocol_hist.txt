@@ -1642,3 +1642,339 @@ results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-
 comment (in code): 
 comment (call): testrun n=1e6; rawplots, all data
 Runtime ~10 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Tue Dec 15 21:38:30 2015
+
+total counted: 7094565
+total from cutflow: 28747962
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 4984230	Ncounts[1]: 2414152	Ncounts[2]: 1723983	Ncounts[3]: 1463237	Ncounts[4]: 0	Ncounts[5]: 2492115	Ncounts[6]: 3034651	Ncounts[7]: 2065076	Ncounts[8]: 7674	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450211910.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~159 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01.root
+finished at: Tue Dec 15 21:39:10 2015
+
+total counted: 2413351
+total from cutflow: 4832230
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 60958	Ncounts[1]: 22194	Ncounts[2]: 18688	Ncounts[3]: 12739	Ncounts[4]: 0	Ncounts[5]: 30479	Ncounts[6]: 392470	Ncounts[7]: 23936	Ncounts[8]: 2693	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01_1450211950.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~40 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Tue Dec 15 21:39:32 2015
+
+total counted: 1422323
+total from cutflow: 4309734
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 11472	Ncounts[1]: 1890	Ncounts[2]: 2362	Ncounts[3]: 859	Ncounts[4]: 0	Ncounts[5]: 5736	Ncounts[6]: 154377	Ncounts[7]: 2730	Ncounts[8]: 134	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450211972.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~22 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Tue Dec 15 21:40:01 2015
+
+total counted: 2036426
+total from cutflow: 4451319
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 480876	Ncounts[1]: 190022	Ncounts[2]: 155151	Ncounts[3]: 87441	Ncounts[4]: 0	Ncounts[5]: 240438	Ncounts[6]: 568629	Ncounts[7]: 177848	Ncounts[8]: 27054	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450212001.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~29 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-05Oct2015-v1.root
+finished at: Tue Dec 15 21:41:08 2015
+
+total counted: 4553520
+total from cutflow: 22024628
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 605552	Ncounts[1]: 289301	Ncounts[2]: 208411	Ncounts[3]: 173542	Ncounts[4]: 0	Ncounts[5]: 302776	Ncounts[6]: 482355	Ncounts[7]: 247102	Ncounts[8]: 974	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-05Oct2015-v1_1450212068.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~67 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-PromptReco-v4.root
+finished at: Tue Dec 15 21:43:54 2015
+
+total counted: 11061940
+total from cutflow: 48801812
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 1712568	Ncounts[1]: 821112	Ncounts[2]: 588396	Ncounts[3]: 494619	Ncounts[4]: 0	Ncounts[5]: 856284	Ncounts[6]: 1343433	Ncounts[7]: 700082	Ncounts[8]: 2572	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-PromptReco-v4_1450212234.root
+comment (in code): 
+comment (call): run complete with all data
+Runtime ~166 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~3 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~2 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~2 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~2 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~2 sec.
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~2 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 12:51:18 2015
+
+total counted: 7094565
+total from cutflow: 28747962
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 4984230	Ncounts[1]: 2414152	Ncounts[2]: 1723983	Ncounts[3]: 1463237	Ncounts[4]: 0	Ncounts[5]: 2492115	Ncounts[6]: 3034651	Ncounts[7]: 2065076	Ncounts[8]: 7674	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450353078.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~164 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01.root
+finished at: Thu Dec 17 12:51:55 2015
+
+total counted: 2413351
+total from cutflow: 4832230
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 60958	Ncounts[1]: 22194	Ncounts[2]: 18688	Ncounts[3]: 12739	Ncounts[4]: 0	Ncounts[5]: 30479	Ncounts[6]: 392470	Ncounts[7]: 23936	Ncounts[8]: 2693	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01_1450353115.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~37 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 12:52:16 2015
+
+total counted: 1422323
+total from cutflow: 4309734
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 11472	Ncounts[1]: 1890	Ncounts[2]: 2362	Ncounts[3]: 859	Ncounts[4]: 0	Ncounts[5]: 5736	Ncounts[6]: 154377	Ncounts[7]: 2730	Ncounts[8]: 134	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450353136.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~22 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 12:52:42 2015
+
+total counted: 2036426
+total from cutflow: 4451319
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 480876	Ncounts[1]: 190022	Ncounts[2]: 155151	Ncounts[3]: 87441	Ncounts[4]: 0	Ncounts[5]: 240438	Ncounts[6]: 568629	Ncounts[7]: 177848	Ncounts[8]: 27054	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450353162.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~26 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-05Oct2015-v1.root
+finished at: Thu Dec 17 12:53:39 2015
+
+total counted: 4553520
+total from cutflow: 22024628
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 605552	Ncounts[1]: 289301	Ncounts[2]: 208411	Ncounts[3]: 173542	Ncounts[4]: 0	Ncounts[5]: 302776	Ncounts[6]: 482355	Ncounts[7]: 247102	Ncounts[8]: 974	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-05Oct2015-v1_1450353219.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~56 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-PromptReco-v4.root
+finished at: Thu Dec 17 12:56:36 2015
+
+total counted: 11061940
+total from cutflow: 48801812
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 1712568	Ncounts[1]: 821112	Ncounts[2]: 588396	Ncounts[3]: 494619	Ncounts[4]: 0	Ncounts[5]: 856284	Ncounts[6]: 1343433	Ncounts[7]: 700082	Ncounts[8]: 2572	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-PromptReco-v4_1450353396.root
+comment (in code): 
+comment (call):  tag and probe corrected; full datasets;
+Runtime ~177 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 13:32:38 2015
+
+total counted: 7094565
+total from cutflow: 28747962
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 2343884	Ncounts[1]: 1623355	Ncounts[2]: 968766	Ncounts[3]: 927120	Ncounts[4]: 0	Ncounts[5]: 1171942	Ncounts[6]: 1317073	Ncounts[7]: 1100525	Ncounts[8]: 3039	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450355558.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~157 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01.root
+finished at: Thu Dec 17 13:33:16 2015
+
+total counted: 2413351
+total from cutflow: 4832230
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 34798	Ncounts[1]: 15467	Ncounts[2]: 11191	Ncounts[3]: 9462	Ncounts[4]: 0	Ncounts[5]: 17399	Ncounts[6]: 198264	Ncounts[7]: 14940	Ncounts[8]: 1881	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_TTGJets_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_v01_1450355596.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~38 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 13:33:37 2015
+
+total counted: 1422323
+total from cutflow: 4309734
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 1310	Ncounts[1]: 416	Ncounts[2]: 405	Ncounts[3]: 316	Ncounts[4]: 0	Ncounts[5]: 655	Ncounts[6]: 27164	Ncounts[7]: 537	Ncounts[8]: 17	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_WGToLNuG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450355617.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~22 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01.root
+finished at: Thu Dec 17 13:34:02 2015
+
+total counted: 2036426
+total from cutflow: 4451319
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 177598	Ncounts[1]: 100717	Ncounts[2]: 67705	Ncounts[3]: 49526	Ncounts[4]: 0	Ncounts[5]: 88799	Ncounts[6]: 169581	Ncounts[7]: 77147	Ncounts[8]: 12107	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_ZGTo2LG_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_v01_1450355642.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~24 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-05Oct2015-v1.root
+finished at: Thu Dec 17 13:34:56 2015
+
+total counted: 4553520
+total from cutflow: 22024628
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 266152	Ncounts[1]: 187348	Ncounts[2]: 111384	Ncounts[3]: 105997	Ncounts[4]: 0	Ncounts[5]: 133076	Ncounts[6]: 184192	Ncounts[7]: 125240	Ncounts[8]: 468	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-05Oct2015-v1_1450355696.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~55 sec.
+--------------------------------------------------------------------------------
+opened data file: /user/rmeyer/mergedNTuples/DoubleEG_Run2015D-PromptReco-v4.root
+finished at: Thu Dec 17 13:37:24 2015
+
+total counted: 11061940
+total from cutflow: 48801812
+Ntest1: 0
+Ntest2: 0
+Ntest3: 0
+Ntest4: 0
+Number of real photons: Ng: 0
+Number of fake photons: Ne: 0
+Fakerate f = Ng/(Ng+Ne) = 0
+Ncounts[0]: 756268	Ncounts[1]: 532182	Ncounts[2]: 315612	Ncounts[3]: 301932	Ncounts[4]: 0	Ncounts[5]: 378134	Ncounts[6]: 521996	Ncounts[7]: 355624	Ncounts[8]: 1236	Ncounts[9]: 0	Ncounts[10]: 0	Ncounts[11]: 0	Ncounts[12]: 0	Ncounts[13]: 0	Ncounts[14]: 0	Ncounts[15]: 0	Ncounts[16]: 0	Ncounts[17]: 0	Ncounts[18]: 0	Ncounts[19]: 0	
+results written in: ../selector_rootFiles/my_selector_results_DoubleEG_Run2015D-PromptReco-v4_1450355844.root
+comment (in code): 
+comment (call):  tag and probe trigger corrected; full datasets;
+Runtime ~148 sec.
