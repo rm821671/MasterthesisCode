@@ -7,7 +7,6 @@
  *******************************************************************************************
 **/
 
-
 #include <ctime>
 #include <sstream>
 #include <iostream>
@@ -318,7 +317,7 @@ void Histogrammer::Init(TTree *tree_)
 	TFile thisFile(thisFileName.c_str());
 	if(!thisFile.IsZombie()){
 		TH1F* hcut = (TH1F*)thisFile.Get("TreeWriter/hCutFlow");
-		nTotalEvents = hcut->GetBinContent(1);
+		nTotalEvents = hcut->GetBinContent(nTotalEvents_bin);
 	}
 	
 	cout << "end of Init()" << endl;
@@ -337,51 +336,24 @@ void Histogrammer::resetSelection() {
 		selHt = 0;
 		selPhotons.clear();
 		selJets.clear();
-
 		selBJets.clear();
 		selElectrons.clear();
 		selMuons.clear();
-	
 		selPFCandidates.clear();
-	
-		
-		
-
-
 		selPhotons2.clear();
 		selJets2.clear();
 		selBJets2.clear();
 		selElectrons2.clear();
 		selMuons2.clear();	
-	
-						// therefore seems to be a "real" photon
-
+		
 		//TagElectron = false;
+		for(int ii = 0; ii < sizeNcounts; ii++){
+			vTemp[ii].SetXYZ(0.,0.,0.);			// reset temp vectors
+			lvTemp[ii].SetPxPyPzE(0.,0.,0.,0.);	// reset temp lorentzvectors
 		
-		vTemp1.SetXYZ(0.,0.,0.);				// temp vector
-		vTemp2.SetXYZ(0.,0.,0.);				// temp vector
-		vTemp3.SetXYZ(0.,0.,0.);				// temp vector
-		vTemp4.SetXYZ(0.,0.,0.);				// temp vector
-
-		lvTemp1.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
-		lvTemp2.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
-		lvTemp3.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
-		lvTemp4.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
-
-		vec_lvTemp1.clear();	// clear lvectors of lorentzvectors
-		vec_lvTemp2.clear();
-		vec_lvTemp3.clear();
-		vec_lvTemp4.clear();
+		}
 		
-		vecTemp1.clear();
-		vecTemp2.clear();
-		vecTemp3.clear();
-		vecTemp4.clear();
 		
-		BestZMatch_ElectronPhoton_Denom.clear();
-		BestZMatch_ElectronPhoton_Num.clear();
-		
-		M_ElectronPhoton.clear();
 		
 		// ************************************************************************
 		// */		
@@ -462,51 +434,9 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	
 	
 	
-	int numberPhoton40 = 0;
-	
-	hname = "rawdata_photon_pt";
-	for(auto& p: photons){
-		h[hname].Fill(p.p.Pt(), selW);
-		
-		if(p.p.Pt() > 40) numberPhoton40++;
-	}
-	
-	hname = "rawdata_electron_pt";
-	for(auto& e: electrons){
-		h[hname].Fill(e.p.Pt(), selW);
-	}
-	
-	hname = "rawdata_jet_pt";
-	for(auto& j: jets){
-		h[hname].Fill(j.p.Pt(), selW);
-	}
 	
 	
-	if(photons.GetSize() == 2 && numberPhoton40 >= 2 && *TriggerR9Id85){
-		hname = "diphotonraw_photon_pt";
-		for(auto& p: photons){
-			
-			h[hname].Fill(p.p.Pt(), selW);
-			
-			vTemp1 = vTemp1 + p.p;	// summed photon momentum
-			Etemp1 += p.p.Mag();	// summed photon energy
-		}
-		
-		hname = "diphotonraw_electron_pt";
-		for(auto& e: electrons){
-			h[hname].Fill(e.p.Pt(), selW);
-		}
 	
-		hname = "diphotonraw_jet_pt";
-		for(auto& j: jets){
-			h[hname].Fill(j.p.Pt(), selW);
-		}
-		
-		lvTemp1.SetVect(vTemp1);// summed momentum
-		lvTemp1.SetE(Etemp1);	// summed energy
-		hname = "diphotonZpeak_jet_pt"; // this is the photon pt!
-		h[hname].Fill(lvTemp1.M(), selW);
-	}
 	
 	
 	
@@ -556,26 +486,11 @@ void Histogrammer::Terminate()
 	cout << "total counted: " << Nnum << endl;
 	cout << "total from cutflow: " << nTotalEvents << endl;
 	
-	cout << "Ntest1: " << Ntest1 << endl;
-	cout << "Ntest2: " << Ntest2 << endl;
-	cout << "Ntest3: " << Ntest3 << endl;
-	cout << "Ntest4: " << Ntest4 << endl;
-	
-	cout << "Number of real photons: Ng: " << Ng_1 << endl;
-	cout << "Number of fake photons: Ne: " << Ne_1 << endl;
-	
-	float f;
-	if(Ng_1<Ne_1) f = Ng_1/(Ng_1+Ne_1);
-	else f = 0.;
-	
-	cout << "Fakerate f = Ng/(Ng+Ne) = " << f << endl;
 	
 	for(int ll=0;ll<sizeNcounts;ll++){
 		cout << "Ncounts[" << ll << "]: " << Ncounts[ll] << "\t";
 	}
 	cout << endl;
-	
-	
 	
 	string comment;
 	
@@ -620,13 +535,6 @@ void Histogrammer::Terminate()
 		prot << "finished at: " << asctime (timeinfo) << endl; 	// readable timestamp
 		prot << "total counted: " << Nnum << endl;
 		prot << "total from cutflow: " << nTotalEvents << endl;
-		prot << "Ntest1: " << Ntest1 << endl;
-		prot << "Ntest2: " << Ntest2 << endl;
-		prot << "Ntest3: " << Ntest3 << endl;
-		prot << "Ntest4: " << Ntest4 << endl;		
-		prot << "Number of real photons: Ng: " << Ng_1 << endl;
-		prot << "Number of fake photons: Ne: " << Ne_1 << endl;
-		prot << "Fakerate f = Ng/(Ng+Ne) = " << f << endl;
 		for(int ll=0;ll<sizeNcounts;ll++){
 			prot << "Ncounts[" << ll << "]: " << Ncounts[ll] << "\t";
 		}
@@ -634,7 +542,6 @@ void Histogrammer::Terminate()
 		prot << "results written in: " << outputName << endl;
 		prot << "comment (in code): " << comment << endl;
 		prot.close();
-		
 		cout << "protocol published!" << endl;
 	}
 	
