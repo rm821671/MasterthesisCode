@@ -15,7 +15,7 @@ void run_histogrammer(string comment, bool allData = false){
 	//string file= path+"DYJetsToLL_M-50.root";
 	
 	int kk = 0;
-	int Ndatasets = 2;
+	int Ndatasets = 2; // number of datasets
 	
 	string datasets[] = {
 						/*
@@ -30,6 +30,10 @@ void run_histogrammer(string comment, bool allData = false){
 							"DoubleEG_Run2015D-PromptReco-v4_Exo_v2.root"
 						};
 	
+	string file;
+	
+	cout << datasets[0] << endl;
+	cout << datasets[1] << endl;
 	
 	//cout << "printed all" << endl;
 	//cout << *(datasets+5) << endl;
@@ -51,7 +55,7 @@ void run_histogrammer(string comment, bool allData = false){
 				cout << "++++++++++++++++++++++ "<<kk<<" ++++++++++++++++++++++++++++++++++++++" << endl;
 				cout << datasets[kk] << endl;
 				
-				file = path+datasets[kk];
+				file = path + datasets[kk];
 				
 				ifstream f(file.c_str());
 				if(!f.good()) {
@@ -87,6 +91,7 @@ void run_histogrammer(string comment, bool allData = false){
 					prot << "Runtime ~" << (end_time - start_time)/1 << " sec." << endl;
 					prot.close();
 				}
+				
 				
 			} // for(NDatasets) loop datasets
 		} // if allData

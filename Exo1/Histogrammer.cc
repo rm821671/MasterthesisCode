@@ -49,7 +49,7 @@ using namespace std;
  *******************************************************************************************/
 
 // number of test count variables
-const int sizeNcounts = 20;
+const int sizeNcounts = 100;
 
 //TCanvas* results;
 
@@ -94,33 +94,30 @@ void replaceInString(string &s) {
 }
 
 
-// create histograms
-//
-// --- --- pass
 
-
-
-
-/*
- * 
- * function to count Ng and Ne per bin for f=Ng/(Ne+Ng)
- * to calculate fake rate dependency on variables
- * 
- ************************************************/ 
-
-/*
-	void Histogrammer::Count_Pt(float Pt, float Ng_, float Ne_){
-		
-		for(int i=0; i<20;i++){
-			if(Pt>=(i*10) && Pt<(i+1)*10){
-				
-				Ng["Pt"].at(i) += Ng_;
-				Ne["Pt"].at(i) += Ne_;
-				
-			}
-		}
-		
+// calculate parameters for corrected iso gamma
+void fIsoGammaCorr(float eta, float& alpha, float& A, float& kappa){
+	
+	alpha = 2.5;		// always
+	A = 0.;				// default
+	kappa = 4.5e-3;		// only change in specific cases, see below
+	
+	// AN Table 8:
+	if(eta < 0.9) A = 0.17;
+	else if(eta > 0.9 && eta < 1.4442) A = 0.14;
+	else if(eta > 1.566 && eta < 2.0) A = 0.11;
+	else if(eta > 2.0 && eta < 2.2){
+		A = 0.14;
+		kappa = 3.0e-3;
 	}
+	else if(eta > 2.2 && eta < 2.5){
+		A = 0.22;
+		kappa = 3.0e-3;
+	}
+	
+}
+
+
 // */
 
 
@@ -169,6 +166,8 @@ class Histogrammer : public TSelector {
 
 		TTreeReaderValue<tree::MET> met;
 		
+		TTreeReaderValue<Float_t> rho;
+		
 		TTreeReaderValue<Float_t> pu_weight;
 		TTreeReaderValue<Char_t> mc_weight;
 		
@@ -186,6 +185,8 @@ class Histogrammer : public TSelector {
 		//TTreeReaderValue<UInt_t> size;
 
 		TTreeReaderValue<Bool_t> isRealData;
+		
+		TTreeReaderValue<Bool_t> signalTrigger; /* this is the used trigger */
 		TTreeReaderValue<Bool_t> signalTriggerFired;
 		TTreeReaderValue<Bool_t> crossTriggerPhotonFired;
 		TTreeReaderValue<Bool_t> crossTriggerHtFired;
@@ -216,12 +217,23 @@ class Histogrammer : public TSelector {
 		TVector3 	vTemp[sizeNcounts]; // array of vectors
 		TLorentzVector	lvTemp[sizeNcounts]; // array of lorentz vectors
 		
+		float Etemp[sizeNcounts];
+		float PSum[sizeNcounts];
+		
+		float isoGammaCorr;
+		
+		
 		float 	Ng_1 =0,
 				Ne_1 =0;
 		float	Ne_pt[10],
 				Ng_pt[10];
 		
 		bool isData;
+		
+		// some name strings
+		string 	hname,
+				h2name,
+				numstr;
 		
 		map<string,TEfficiency> eff;	// efficiencies
 		map<string,TH1F> h;				// 1d histograms
@@ -246,10 +258,12 @@ Histogrammer::Histogrammer():
 	met( fReader, "met" ),
 	nGoodVertices( fReader, "nGoodVertices" ),
 	nChargedPfCandidates( fReader, "nChargedPfCandidates" ),
+	rho ( fReader, "rho" ),
 	mc_weight( fReader, "mc_weight" ),
 	pu_weight( fReader, "pu_weight" ),
 	
 	genHt( fReader, "genHt"),
+	
 	
 	
 	signalTrigger( fReader, "HLT_DoublePhoton60_v" ), /* this is the trigger used for the analysis */
@@ -276,11 +290,13 @@ void Histogrammer::initSelection( string const& s ) {
 	
 	cout << "initSelection()" << endl;	
 	
-	string hname;
-	string h2name;
 	
-	hname = "diphoton_excess";
+	hname = "diphoton_EBEB";
 	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2000,0,2000);
+	
+	hname = "diphoton_EBEE";
+	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2000,0,2000);
+	
 	
 	// TH2F (const char *name, const char *title, 
 	//	Int_t nbinsx, Double_t xlow, Double_t xup, 
@@ -333,7 +349,7 @@ void Histogrammer::Init(TTree *tree_)
  ************************************************/
 void Histogrammer::resetSelection() {
 	
-		selHt = 0;
+		
 		selPhotons.clear();
 		selJets.clear();
 		selBJets.clear();
@@ -346,13 +362,12 @@ void Histogrammer::resetSelection() {
 		selElectrons2.clear();
 		selMuons2.clear();	
 		
-		//TagElectron = false;
-		for(int ii = 0; ii < sizeNcounts; ii++){
-			vTemp[ii].SetXYZ(0.,0.,0.);			// reset temp vectors
-			lvTemp[ii].SetPxPyPzE(0.,0.,0.,0.);	// reset temp lorentzvectors
-		
+		for(int i = 0; i < sizeNcounts; i++){
+			vTemp[i].SetXYZ(0.,0.,0.);			// reset temp vectors
+			lvTemp[i].SetPxPyPzE(0.,0.,0.,0.);	// reset temp lorentzvectors
+			Etemp[i] = 0.;
+			PSum[i] = 0.;
 		}
-		
 		
 		
 		// ************************************************************************
@@ -419,18 +434,170 @@ void Histogrammer::SlaveBegin(TTree *tree_)
  ************************************************/
 Bool_t Histogrammer::Process(Long64_t entry)
 {
-	// comment this out to get whole tree analyzed:
+	// comment this out to analyze the whole tree:
 	//if(Nnum > 1000000) return kTRUE;
 	
-	string numstr;
-	string hname;
-	string h2name;
+	resetSelection();
 	
-	resetSelection();	
 	fReader.SetEntry(entry);	// fReader points on current entry
 	
 	// set weight
 	selW = *mc_weight * *pu_weight;
+	
+	// counter for EBEB and EBEE
+	int		nEBEB = 0,
+			nEBEE = 0;
+	
+	
+	
+	// counter for the combinations:
+	// maximum photon number is 14, thus 91 combinations are possible
+	int 	comb = 0,
+			selComb = 0; // counts selected combinations
+	
+	// trigger:
+	if(*signalTrigger){
+		
+		// loop photons
+		// and count kinematic criteria
+		// maximum number of photons: 14
+		for(int ip=0,np=photons.GetSize(); ip < np;ip++){
+			
+			// calculate all diphoton objects per event
+			for(int iq=ip+1; iq<np; iq++){
+				// check for criteria
+				if(	(photons[ip].p.Pt() > 75. && photons[iq].p.Pt() > 75.) &&
+					(fabs(photons[ip].p.Eta()) < 2.5 && fabs(photons[iq].p.Eta()) < 2.5) &&
+					(fabs(photons[ip].p.Eta()) < 1.4442 || fabs(photons[iq].p.Eta()) < 1.4442) 
+					){
+					
+					lvTemp[comb].SetVect(photons[ip].p + photons[iq].p);			// summed momentum
+					lvTemp[comb].SetE(photons[ip].p.Mag() + photons[iq].p.Mag());	// summed energy
+					
+					// EBEB
+					if( ((fabs(photons[ip].p.Eta()) < 1.4442 && fabs(photons[iq].p.Eta()) < 1.4442) &&
+						lvTemp[comb].M() > 230.) ){
+							nEBEB++;
+							selPhotons.push_back(&photons[ip]);
+							selPhotons2.push_back(&photons[iq]);
+							
+							PSum[selComb] = photons[ip].p.Mag() + photons[iq].p.Mag();
+							
+							selComb++;
+							Ncounts[0] ++;
+						
+					}
+					
+					// EBEE
+					if( ((fabs(photons[ip].p.Eta()) >= 1.4442 || fabs(photons[iq].p.Eta()) >= 1.4442) &&
+						lvTemp[comb].M() > 320.) ){
+							nEBEE++;
+							
+							selPhotons.push_back(&photons[ip]);
+							selPhotons2.push_back(&photons[iq]);
+							
+							PSum[selComb] = photons[ip].p.Mag() + photons[iq].p.Mag();
+							
+							selComb++;
+							Ncounts[1] ++;
+							
+						}
+					
+				}
+				//comb++; // all combinations (no need to count this)
+			}
+		}
+		
+		if(nEBEB && nEBEE){
+			Ncounts[2]++;
+			// this is rougly 1% of all events, 
+			// where more than one diphoton object fullfills the criteria
+			
+			//cout << Ncounts[2] << "\t nEBEB: " << nEBEB << " - nEBEE: " << nEBEE << endl;
+		}
+		
+		// at least one diphoton object passed the selection:
+		if(nEBEB>0 || nEBEE>0){
+			
+			bool	p1 = false,
+					p2 = false;
+			
+			// the index of the combination with the highest scalar sum of momenta:
+			int maxComb = distance(PSum, max_element(PSum, PSum+sizeNcounts));
+			
+			// the criteria have to be fullfilled for both photons individually
+			float alpha, A, kappa;
+			
+			// selection cuts of AN section 6.1
+			// photon 1
+			fIsoGammaCorr(fabs(selPhotons[maxComb]->p.Eta()), alpha, A, kappa);
+			isoGammaCorr = alpha + selPhotons[maxComb]->isoPhotonsEA - (*rho) * A - kappa * selPhotons[maxComb]->p.Pt();
+			if(	(fabs(selPhotons[maxComb]->p.Eta()) < 1.4442 &&
+				selPhotons[maxComb]->isoChargedHadronsEA > 5 &&
+				isoGammaCorr > 2.75 &&
+				selPhotons[maxComb]->hOverE > 5.0e-2 &&
+				selPhotons[maxComb]->sigmaIetaIeta > 0.0105)
+				||
+				(fabs(selPhotons[maxComb]->p.Eta()) > 1.566 &&
+				selPhotons[maxComb]->isoChargedHadronsEA > 5 &&
+				isoGammaCorr > 2.0 &&
+				selPhotons[maxComb]->hOverE > 5.0e-2 &&
+				selPhotons[maxComb]->sigmaIetaIeta > 0.028)
+				){
+					p1 = true;
+			}
+			// photon 2
+			fIsoGammaCorr(fabs(selPhotons2[maxComb]->p.Eta()), alpha, A, kappa);
+			isoGammaCorr = alpha + selPhotons2[maxComb]->isoPhotonsEA - (*rho) * A - kappa * selPhotons2[maxComb]->p.Pt();
+			if(	(fabs(selPhotons2[maxComb]->p.Eta()) < 1.4442 &&
+				selPhotons2[maxComb]->isoChargedHadronsEA > 5 &&
+				isoGammaCorr > 2.75 &&
+				selPhotons2[maxComb]->hOverE > 5.0e-2 &&
+				selPhotons2[maxComb]->sigmaIetaIeta > 0.0105)
+				||
+				(fabs(selPhotons2[maxComb]->p.Eta()) > 1.566 &&
+				selPhotons2[maxComb]->isoChargedHadronsEA > 5 &&
+				isoGammaCorr > 2.0 &&
+				selPhotons2[maxComb]->hOverE > 5.0e-2 &&
+				selPhotons2[maxComb]->sigmaIetaIeta > 0.028)
+				){
+					p2 = true;
+			}
+			
+			// now fill (if both pass the cuts)
+			if(p1 && p2){
+				lvTemp[comb].SetVect(	selPhotons[maxComb]->p + 		selPhotons2[maxComb]->p);		// summed momentum
+				lvTemp[comb].SetE(		selPhotons[maxComb]->p.Mag() + 	selPhotons2[maxComb]->p.Mag());	// summed energy
+				
+				// EBEB or EBEE?
+				if(	fabs(selPhotons[maxComb]->p.Eta()) < 1.4442 && 
+					fabs(selPhotons2[maxComb]->p.Eta()) < 1.4442 ){ //EBEB
+						hname = "diphoton_EBEB";
+						h[hname].Fill(lvTemp[comb].M());
+					}
+					
+				if(	fabs(selPhotons[maxComb]->p.Eta()) >= 1.4442 || 
+					fabs(selPhotons2[maxComb]->p.Eta()) >= 1.4442 ){ //EBEE
+						hname = "diphoton_EBEE";
+						h[hname].Fill(lvTemp[comb].M());
+					}
+				
+				
+				
+			}
+		}
+		
+		
+		
+		
+		
+		
+
+		
+		
+		
+	
+	} // if signalTrigger
 	
 	
 	
