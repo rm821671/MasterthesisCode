@@ -1,0 +1,15 @@
+.
+|-- content.txt
+|-- data
+|-- modules
+|   |-- __init__.py
+|   |-- auxiliary.py
+|   |-- filemanager.py
+|   `-- lib_plot.py
+|-- plot_tool_v2.py
+|-- test
+|   `-- ptest.py
+`-- tools
+    `-- __init__.py
+
+4 directories, 8 files
