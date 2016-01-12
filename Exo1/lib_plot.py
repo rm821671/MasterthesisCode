@@ -1,22 +1,56 @@
 """
-
-
+some classes and functions
 
 """
 
-from ROOT import *
+import ROOT as rt
+from lib_filemanagement import *
 import numpy as np
 import datetime
 import calendar
 import sys
 import os
+from array import array
 
 
 #gROOT.Reset()
-gROOT.SetStyle("Plain")
-gStyle.SetOptStat(0)
-gStyle.SetOptFit(111111)
-gStyle.SetPalette(1)
+rt.gROOT.SetStyle("Plain")
+rt.gStyle.SetOptStat(0)
+rt.gStyle.SetOptFit(111111)
+rt.gStyle.SetPalette(1)
+
+
+
+class FileSaver():
+	'''
+	
+	'''
+	def __init__(self, filename, treepath, *args):
+		# args:
+		# 0: text plotted
+		# 1:
+		 
+		self.filename = filename # 
+		self.treepath = treepath # e.g. 'HtBins'
+		
+		
+	
+	
+	def save(self, obj, name):
+		name = self.treepath+'/'+name
+		if isinstance(obj, rt.TCanvas):
+			obj.Update()
+			
+		
+		f = rt.TFile(self.filename, "update")
+		f.cd()
+		
+		
+		
+		
+		
+	
+
 
 
 
@@ -32,12 +66,12 @@ class Histo(object):
 	'''
 	for histogram objects
 	'''
-	def __init__(self,TH):
+	def __init__(self):
 		self.name = strName
 		
 		
 	def __str__(self):
-		return self.name 
+		return self.name
 
 
 
@@ -50,7 +84,7 @@ class HistoCollection(object):
 		self.h = {}
 	
 	
-	def add(self,TH):
+	def add(self,h):
 		self.count += 1
 		
 		
@@ -60,9 +94,240 @@ class HistoCollection(object):
 		# using their integral and returns a list with the correct order
 		pass
 	
+
+
+
+class ratioCanvasHF(object):
+	'''
+	create a canvas with a ratio plot
+	from a histogram to a fitted function
+	where h=data, f=fit, ratioplot=(h-f)/sigma_h
 	
+	standard size: width*height = 
 	
+	usage:
+	cr = ratioCanvasFunction(h,f, "name")
+	cr.draw() # create the canvas
 	
+	'''
+	def __init__(self,h,f,name,csize=900):
+		
+		self.cname = name
+		
+		self.cwidth = csize
+		self.cheight = csize-csize/4
+		
+		self.h = h
+		self.f = f
+		
+		self.h.SetMarkerColor(rt.kRed)
+		self.h.SetLineWidth(1)
+		self.h.SetMarkerStyle(20)
+		
+		self.xmin = h.GetXaxis().GetXmin()
+		self.xmax = h.GetXaxis().GetXmax()
+		
+		self.h.SetTitle(name)
+		
+		# for graphic reasons, overwritten when createRatio is called
+		self.bin0 = 0
+		self.binEnd = 0
+		
+		# create ratio plot histogram
+		self.ratio = self.createRatio(h, f)
+		
+		# percentage of the ratio plot
+		self.rat = 0.37
+		
+		
+	
+	def draw(self, *log):
+		
+		if log:
+			pass
+		else:
+			log = ["logx","logy"]
+		
+		
+		self.c = rt.TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
+		self.c.cd()
+		
+		if "EBEB" in self.cname:
+			#print "EBEB"
+			img = rt.TImage.Open("CMS-PAS-EXO-15-004_Figure_003-a.png")
+			#img.Draw("x")
+		
+		if "EBEE" in self.cname:
+			#print "EBEE"
+			img = rt.TImage.Open("CMS-PAS-EXO-15-004_Figure_003-b.png")
+			#img.Draw("x")
+		
+		
+		# zero line
+		self.f0 = rt.TF1("f1","0",self.xmin,self.xmax)
+		self.f0.SetLineWidth(2)
+		
+		#self.c.SetBottomMargin(0.1)
+		
+		# 
+		self.pad1 = rt.TPad("pad1","pad1",0,self.rat,1,1)
+		self.pad2 = rt.TPad("pad2","pad2",0,0.0,1,self.rat)
+		
+		self.pad1.SetBottomMargin(0.01)
+		
+		self.pad2.SetTopMargin(0)
+		self.pad2.SetBottomMargin(0.15)
+		
+		self.pad1.SetFillStyle(4000)
+		self.pad1.SetFrameFillStyle(4000)
+		self.pad2.SetFillStyle(4000)
+		self.pad2.SetFrameFillStyle(4000)
+		
+		self.pad1.SetGridx()
+		self.pad1.SetGridy()
+		
+		self.pad2.SetGridx()
+		self.pad2.SetGridy()
+		
+		
+		
+		if "logx" in log:
+			self.pad1.SetLogx()
+			self.pad2.SetLogx()
+		
+		if "logy" in log:
+			self.pad1.SetLogy()
+			self.h.SetMinimum(10e-3)
+			#self.h.SetMinimum(self.f.Eval(1.01*self.binEnd))
+			self.h.SetMaximum(300)
+			#self.h.SetMaximum(self.f.Eval(0.5*self.bin0))
+			
+		self.c.cd()
+		
+		self.h.SetLineWidth(2)
+		
+		#self.h.SetLineStyle(8)
+		
+		# pad1: histogram + fit
+		self.pad1.Draw()
+		self.pad1.cd()
+		self.h.DrawCopy("hist")
+		self.h.SetLineWidth(1)
+		self.h.Draw("ep same")
+		self.f.Draw("same")
+		
+		self.c.cd()
+		
+		# pad2: ratioplot (+ zero line)
+		self.pad2.Draw()
+		self.pad2.cd()
+		self.ratio.Draw("ep")
+		self.f0.Draw("same")
+		self.c.cd()
+		
+		
+		
+		
+		#self.c.SaveAs("plots/" + self.cname + ".png")
+		#self.c.SaveAs("plots/" + self.cname + ".root")
+		
+		# append plot canvases to root tree
+		filename = "plots/plots.root"
+		myfile = rt.TFile(filename,"UPDATE")
+		self.c.Write()
+		
+		# '''
+		
+		#return self.c
+	
+	def addHisto(self,his, hf):
+		csize = 900
+		
+		entries = his.GetNbinsX()
+		
+		xmin = his.GetXaxis().GetXmin()
+		xmax = his.GetXaxis().GetXmax()
+		
+		binwidth = int((xmax-xmin)/entries)
+		
+		hname = his.GetName() +"_"+str(binwidth)
+		
+		#self.h.SetMaximum(h.GetMaximum())
+		c = rt.TCanvas(hname,hname,csize,csize*3/4)
+		c.SetLogx()
+		c.SetLogy()
+		#h.SetLineColor(kBlue)
+		#self.h.Draw("ep")
+		
+		his.SetLineColor(rt.kBlack)
+		his.SetLineWidth(2)
+		hf.SetLineColor(rt.kBlue)
+		hf.SetLineWidth(2)
+		
+		c.cd()
+		his.Draw("hist")
+		hf.Draw("same hist")
+		self.h.Draw("same ep")
+		c.Update()
+		
+		
+		
+		# append plot canvas to root tree
+		filename = "plots/cumulatives.root"
+		myfile = rt.TFile(filename,"UPDATE")
+		c.Write()
+		#c.SaveAs("plots/firstone.root")
+		
+		# '''
+		
+	
+	def getHist(self):
+		return self.h
+	
+	def createRatio(self,h,f):
+		# creates a ratio histogram Diff = (Data-Fit)/Sigma_stat
+		# from "data" histogram(h) and fit(f)
+		#
+		# WARNING: the errors of Diff are estimated gaussian:
+		# err = dDiff/dData*Sigma_stat = 1/Sigma_stat*Sigma_stat = 1	!!!
+		# 
+		entries = h.GetNbinsX()
+		
+		diff =[]
+		err = []
+		xvals = []
+		for i in range(0,entries):
+			data = h.GetBinContent(i)
+			terr = np.sqrt(data)
+			if terr == 0.: # to avoid 1/NULL or errors
+				terr = 1.
+			err.append(terr)
+			x = h.GetBinCenter(i)
+			xvals.append(x)
+			fitted = f.Eval(x)
+			diff.append((data-fitted)/terr)
+		
+		self.bin0 = xvals[0]
+		self.binEnd = xvals[entries-1]
+		
+		htitle = ";" + h.GetXaxis().GetTitle() + ";(data-fit)/#sigma_{stat}"
+		hname = "ratio" + self.cname
+		ratio = rt.TH1F(hname,htitle,entries,self.xmin,self.xmax)
+		for i in range(0, entries):
+			ratio.SetBinContent(i, diff[i])
+			ratio.SetBinError(i,1.)
+		
+		ratio.GetXaxis().SetLabelSize(0.07)
+		ratio.GetXaxis().SetTitleSize(0.07)
+		ratio.GetYaxis().SetLabelSize(0.05)
+		ratio.GetYaxis().SetTitleSize(0.04)
+		
+		ratio.SetMarkerStyle(20)
+		ratio.SetMarkerColor(rt.kRed)
+		
+		ratio.SetStats(0) # dont plot the stat box from the ratio
+		
+		return ratio
 
 
 
@@ -107,16 +372,16 @@ class myCanvas(object):
 			self.htem.GetXaxis().SetRange(self.xmin, self.xmax)
 			#self.stack.GetXaxis().SetRange(self.xmin, self.xmax)
 		
-		self.c = TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
-		self.pad1 = TPad("pad1","pad1",0,self.rat,1,1)
-		self.pad2 = TPad("pad2","pad2",0,0,1,self.rat)
+		self.c = rt.TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
+		self.pad1 = rt.TPad("pad1","pad1",0,self.rat,1,1)
+		self.pad2 = rt.TPad("pad2","pad2",0,0,1,self.rat)
 		self.pad1.SetBottomMargin(0)
 		self.pad2.SetTopMargin(0)
 		
 		self.pad1.Draw()
 		self.pad1.cd()
 		
-
+		
 		
 		if(self.data.GetMaximum() > self.mc.GetMaximum()):
 			print "data>mc"
@@ -211,8 +476,8 @@ class myCanvasRatio(myCanvas):
 	
 	def pads(self, rat):
 		
-		self.pad1 = TPad("pad1","pad1",0,rat,1,1)
-		self.pad2 = TPad("pad2","pad2",0,0,1,rat)
+		self.pad1 = rt.TPad("pad1","pad1",0,rat,1,1)
+		self.pad2 = rt.TPad("pad2","pad2",0,0,1,rat)
 		self.pad1.SetBottomMargin(0)
 		self.pad2.SetBottomMargin(0)
 		
@@ -271,7 +536,7 @@ class Ratio(object):
 	
 	def initRatio(self):
 		
-		self.hisratio = TH1F(self.name,self.title,self.nbins,self.__xmin,self.__xmax)
+		self.hisratio = rt.TH1F(self.name,self.title,self.nbins,self.__xmin,self.__xmax)
 		
 	
 	def setOpt(self):
@@ -310,7 +575,7 @@ class Ratio(object):
 		return self.hisratio
 		
 	def getOneline(self):
-		self.f1 = TF1("f1","1.",self.__xmin,self.__xmax)
+		self.f1 = rt.TF1("f1","1.",self.__xmin,self.__xmax)
 		self.f1.SetLineWidth(1)
 		return self.f1
 	
@@ -346,10 +611,10 @@ class Eff(object):
 		self.htotal = h
 	
 	def Graph(self):
-		if(TEfficiency.CheckConsistency(self.hpassed,
+		if(rt.TEfficiency.CheckConsistency(self.hpassed,
 										self.htotal)):
 			print("consistency checked")
-			self.eff = TEfficiency(	self.hpassed,
+			self.eff = rt.TEfficiency(	self.hpassed,
 									self.htotal)
 			
 			self.graph = self.eff.CreateGraph()
@@ -384,7 +649,7 @@ class Eff(object):
 		self.graph.SetMinimum(self.ymin)
 		self.graph.SetMaximum(self.ymax)
 		
-		self.c = TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
+		self.c = rt.TCanvas(self.cname,self.cname,self.cwidth,self.cheight)
 		self.c.cd()
 		self.graph.Draw("ap")
 		if self.ffit != 0:
@@ -409,7 +674,7 @@ class GraphText(object):
 
 
 
-def Fakerate(object):
+class Fakerate(object):
 	def __init__(self,THpassed,THtotal):
 		self.passed = THpassed
 		self.total = THtotal
@@ -417,166 +682,77 @@ def Fakerate(object):
 	
 	def plot(self, c):
 		return 0
+
+
+
+
+
+def createHistoFromFunction(f, h):
+	# create a histogram from a given function 
+	# 
+	fname = f.GetName()
+	entries = h.GetNbinsX()
+	hname = h.GetName()
+	xmin = h.GetXaxis().GetXmin()
+	xmax = h.GetXaxis().GetXmax()
+	xtitle = h.GetXaxis().GetTitle()
+	ytitle = h.GetYaxis().GetTitle() 
+	binwidth = int((xmax-xmin)/entries)
 	
-def GiveTimestamp(strIn):
-	'''
-	returns the timestamp of a given string,
-	if the structure of the string is of the form:
-		"... _xyz_timestamp.root"
-	'''
-	return True
+	hf = rt.TH1F(hname+"_"+str(binwidth),"cumulative "+fname+";"+xtitle+";"+ytitle,entries,xmin,xmax) 
 	
-def GiveOutputString(strIn):
-	'''
-	takes the timestamp from the given string to
-	create a string for the matching plot output file.
-	an additional timestamp 144XXXXXX is added.
+	# fill histogram with the function values at bin centers
+	for i in range(0,entries):
+		x = h.GetBinCenter(i)
+		hf.SetBinContent(i, f.Eval(x))
 	
-	input string hast to be of the form:
-		../selector_rootFiles/my_selector_results_DY_v1_1447935068.root
-		
-	return:
-		../plot_rootFiles/2015_48/my_plot_results_v1_1447935068_144XXXXXX.root
-	'''
-	ss = "../plot_rootFiles/"
-	foldername = GiveYearWeekFoldername()
-	strTemp = strIn.split("_")	
-	strPath = ss + foldername + "my_plot_results_"
-	dd = datetime.datetime.utcnow()
-	strTimestamp = str(calendar.timegm(dd.timetuple()))
-	strFormerTitle = strTemp[len(strTemp)-2]
-	strEnd = strTemp[len(strTemp)-1] # 14XXXXXXXXXXX.root
-	strFormerTimestamp = strEnd.split(".")[0]
-	strFile = strFormerTitle + "_" + strFormerTimestamp + "_" + strTimestamp + ".root"
-	if ensure_Dir(ss+foldername):
-		#print "dir ensured"
-		return strPath + strFile
+	return hf
+
+
+def CumulativePlot(h, direction):
+	# creates a cumulative histogram
+	# direction:	"up" from lower x add up bins to upper x
+	#				"down" from upper x add up bins to lower x
+	entries = h.GetNbinsX()
+	hname = h.GetName()
+	xmin = h.GetXaxis().GetXmin()
+	xmax = h.GetXaxis().GetXmax()
+	xtitle = h.GetXaxis().GetTitle()
+	ytitle = h.GetYaxis().GetTitle()
+	
+	binwidth = int((xmax-xmin)/entries)
+	
+	summed = 0
+	
+	hc = rt.TH1F(hname+"_"+str(binwidth),"cumulative "+direction+";"+xtitle+";"+ytitle,entries,xmin,xmax)
+	
+	if direction == "up":
+		r = range(0, entries-1, 1)
+		summed = h.GetBinContent(1)
+	if direction == "down":
+		r = range(entries-1, 0, -1)
+		summed = h.GetBinContent(entries)
 	else:
-		#print "dir not ensured"
-		return False
-
-
-def inputFileNumberOfLines():
-	f = "outputfiles.txt"
-	k = 0
-	with open(f,"r") as s:
-		for line in s:
-			k += 1
-	return k
+		print "... please give correct direction"
+		sys.exit()
 	
-
-def inputFile(n=""):
-	'''
-	returns the last line (default) or given line of the file outputfiles.txt,
-	cleaned by the \n newline sign
-	'''
-	f = "outputfiles.txt"
-	k = 0
-	l = False
-	if(n!=""):
-		l = True
-	with open(f,"r") as s:
-		for line in s:
-			k += 1
-			if(l and k == n):
-				return line.replace("\n","")
-	return line.replace("\n","")
-
-
-def FilelistDatetime():
-	'''
-	reads the file outputfiles.txt used by plot_tool.py
-	and writes a list with the filenames and the 
-	datetime given from the timestamp, also the file size in byte
+	for i in r:
+		summed = summed + h.GetBinContent(i)
+		hc.SetBinContent(i, summed)
 	
-	output: files_date.txt
-	'''
-	fi = "outputfiles.txt"
-	fo = "files_date.txt"
-	lines = []
-	with open(fi,"r") as s:
-		for line in s:
-			path = line.replace("\n","")
-			try:
-				fsize = str(os.path.getsize(path))
-			except os.error:
-				fsize = " n/a "
-			ss = line.split("_")
-			d = int(ss[len(ss)-1].split(".")[0])		#date from filename
-			ds = str(datetime.datetime.fromtimestamp(d)) #datestring
-			lines.append(ds + "\t" + fsize + "\t" + line)
-	with open(fo,"w") as s:
-		for l in lines:
-			s.write(l)
-	return True
-
-
-def GivePlotfolder():
-	'''
-	returns the path of the current plot folder (year and week number)
-	example: "../plots/2015_48/" (including the last / )
-	'''
-	ss = "../plots/"
-	foldername = GiveYearWeekFoldername()
-	if ensure_Dir(ss+foldername):
-		#print "dir ensured"
-		return ss+foldername
-	else:
-		#print "dir not ensured"
-		return False
-
-def GiveYearWeekFoldername():
-	'''
-	returns a string constructed by year and week, e.g.:
-	"2015_48/"
-	'''
-	today = datetime.date.today()
-	y,w,d = today.isocalendar()
-	return str(y)+"_"+str(w)+"/"
-
-def GivePlotFilePath(strFile):
-	'''
-	returns the file
-	'''
-	path = GivePlotfolder()
-	return path+strFile
-
-
-def Folder():
-	'''
-	
-	'''
-	pass
-
-def ensure_Dir(path):
-	'''
-	checks if a path exists, otherwise create it
-	'''
-	d = os.path.dirname(path)
-	if not os.path.exists(d):
-		# print "path doesnt exist"
-		os.mkdir(d)
-		return True
-	elif os.path.exists(d):
-		# print "path exists"
-		return True
-
-
-def someTest():
-	return 0
+	return hc
 
 
 
 
 
-
-def give_hCutFlow(path):
+def give_hCutFlow(path,bin_=2):
 	'''
 	gives back the first bin of hCutFlow
 	'''
-	data = TFile(path)
+	data = rt.TFile(path)
 	hcutflow = data.Get("TreeWriter/hCutFlow")
-	return hcutflow.GetBinContent(2)
+	return hcutflow.GetBinContent(bin_)
 
 
 
@@ -612,7 +788,7 @@ def giveMClumiScalefactor(key):
 
 def giveCrossSectionMC(key):
 	'''
-	returns lumi in pb
+	returns cross section in pb
 	'''
 	cs = {		"DYJetsToLL": 6025.2, # NLO
 				# "DYJetsToLL": 6104., # LO
@@ -639,6 +815,48 @@ def giveLumiData(key):
 	#		return lumi[k]
 	val = 2.11e3
 	return val
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

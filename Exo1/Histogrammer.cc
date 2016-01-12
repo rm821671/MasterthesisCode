@@ -66,6 +66,23 @@ template <typename T> string NumberToString ( T Number ) {
   }
 
 
+// 
+string getRawFileName( string strIn){
+	// converts "/path/to/ntuple/XYZ.root"
+	// to "XYZ"
+	
+	auto PosStart = strIn.rfind("/");
+	auto PosEnd = strIn.find(".root");
+	
+	string outputName;
+	
+	if( PosEnd != string::npos ) {
+		outputName = strIn.substr( PosStart+1, PosEnd-PosStart-1 );
+	}
+	return outputName;
+	
+}
+
 // create output file name depending on input tree
 string getOutputFilename( string strIn ) {
 
@@ -172,7 +189,8 @@ class Histogrammer : public TSelector {
 		TTreeReaderValue<Char_t> mc_weight;
 		
 		TTreeReaderValue<Float_t> genHt;
-
+		
+		
 		TTreeReaderValue<Int_t> nGoodVertices;
 		TTreeReaderValue<Int_t> nChargedPfCandidates;
 		TTreeReaderValue<Int_t> nPV;
@@ -263,8 +281,9 @@ Histogrammer::Histogrammer():
 	pu_weight( fReader, "pu_weight" ),
 	
 	genHt( fReader, "genHt"),
-	
-	
+	eventNo( fReader, "evtNo"),
+	runNo( fReader, "runNo"),
+	lumNo( fReader, "lumNo"),
 	
 	signalTrigger( fReader, "HLT_DoublePhoton60_v" ), /* this is the trigger used for the analysis */
 	
@@ -290,17 +309,49 @@ void Histogrammer::initSelection( string const& s ) {
 	
 	cout << "initSelection()" << endl;	
 	
-	
+	// PAS selection
 	hname = "diphoton_EBEB";
-	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2000,0,2000);
-	
+	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2100,0,2100);
 	hname = "diphoton_EBEE";
-	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2000,0,2000);
+	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2100,0,2100);
 	
 	
 	// TH2F (const char *name, const char *title, 
 	//	Int_t nbinsx, Double_t xlow, Double_t xup, 
 	//	Int_t nbinsy, Double_t ylow, Double_t yup)
+	
+	// ht cuts:
+	h2name = "diphoton_ht-EBEB";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	h2name = "diphoton_ht-EBEE";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	
+	// ht star (+ gamma)
+	h2name = "diphoton_htstar-EBEB";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						4000,0,4000);
+	h2name = "diphoton_htstar-EBEE";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						4000,0,4000);
+	
+	// met cuts:
+	h2name = "diphoton_met-EBEB";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];met< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	h2name = "diphoton_met-EBEE";
+	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];met< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	
+	
+	// not used:
 	h2name = "Ntrk_Pt_plane";
 	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";Number;Pt",
 						300,0,300,
@@ -335,6 +386,8 @@ void Histogrammer::Init(TTree *tree_)
 		TH1F* hcut = (TH1F*)thisFile.Get("TreeWriter/hCutFlow");
 		nTotalEvents = hcut->GetBinContent(nTotalEvents_bin);
 	}
+	
+	cout << "rawfile: " << getRawFileName(fReader.GetTree()->GetCurrentFile()->GetName()) << endl;
 	
 	cout << "end of Init()" << endl;
 	
@@ -398,7 +451,7 @@ void Histogrammer::Begin(TTree * /*tree*/)
 	// The tree argument is deprecated (on PROOF 0 is passed).
 
 	cout << "Begin()" << endl;
-
+	
 	//TString option = GetOption();
 	//cout << "Option: " << option << endl;
 	//Info("Begin", "starting a simple exercise with process option: %s", option.Data());
@@ -435,11 +488,27 @@ void Histogrammer::SlaveBegin(TTree *tree_)
 Bool_t Histogrammer::Process(Long64_t entry)
 {
 	// comment this out to analyze the whole tree:
-	//if(Nnum > 1000000) return kTRUE;
+	//if(Nnum > 100000) return kTRUE;
+	
+	// counter output
+	//if((Nnum % 100000) == 0) cout << "event \t" << Nnum << "\t done..."  << endl;
+	
+	
 	
 	resetSelection();
 	
 	fReader.SetEntry(entry);	// fReader points on current entry
+	
+	//string filename = getRawFileName(fReader.GetTree()->GetCurrentFile()->GetName());
+	
+/*
+	for(auto& p: photons){
+			if(p.passElectronVeto) Ncounts[50]++;
+			if(!p.passElectronVeto) Ncounts[51]++;
+			
+			if(p.passElectronVeto && !p.passElectronVeto) Ncounts[52]++;
+	}
+*/
 	
 	// set weight
 	selW = *mc_weight * *pu_weight;
@@ -449,6 +518,19 @@ Bool_t Histogrammer::Process(Long64_t entry)
 			nEBEE = 0;
 	
 	
+	float	ht = 0.,
+			htstar = 0;
+	
+	// ht:
+	for(auto& j: jets){
+		ht += j.p.Pt();
+		htstar += j.p.Pt();
+	}
+	
+	// htstar
+	for(auto& p: photons){
+		htstar += p.p.Pt();
+	}
 	
 	// counter for the combinations:
 	// maximum photon number is 14, thus 91 combinations are possible
@@ -465,14 +547,16 @@ Bool_t Histogrammer::Process(Long64_t entry)
 			
 			// calculate all diphoton objects per event
 			for(int iq=ip+1; iq<np; iq++){
-				// check for criteria
-				if(	(photons[ip].p.Pt() > 75. && photons[iq].p.Pt() > 75.) &&
-					(fabs(photons[ip].p.Eta()) < 2.5 && fabs(photons[iq].p.Eta()) < 2.5) &&
+				// check for criteria 1.4442 and 1.566
+				if(	(photons[ip].passElectronVeto && photons[iq].passElectronVeto) && // conversion free
+					(photons[ip].p.Pt() > 75. && photons[iq].p.Pt() > 75.) &&
+					(fabs(photons[ip].p.Eta()) < 2.5 && (fabs(photons[ip].p.Eta()) > 1.556 || fabs(photons[ip].p.Eta()) < 1.4442)) &&
+					(fabs(photons[iq].p.Eta()) < 2.5 && (fabs(photons[iq].p.Eta()) > 1.556 || fabs(photons[iq].p.Eta()) < 1.4442)) &&
 					(fabs(photons[ip].p.Eta()) < 1.4442 || fabs(photons[iq].p.Eta()) < 1.4442) 
 					){
 					
-					lvTemp[comb].SetVect(photons[ip].p + photons[iq].p);			// summed momentum
-					lvTemp[comb].SetE(photons[ip].p.Mag() + photons[iq].p.Mag());	// summed energy
+					lvTemp[comb].SetVect(	photons[ip].p 		+ photons[iq].p);			// summed momentum
+					lvTemp[comb].SetE(		photons[ip].p.Mag() + photons[iq].p.Mag()	);	// summed energy
 					
 					// EBEB
 					if( ((fabs(photons[ip].p.Eta()) < 1.4442 && fabs(photons[iq].p.Eta()) < 1.4442) &&
@@ -489,7 +573,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 					}
 					
 					// EBEE
-					if( ((fabs(photons[ip].p.Eta()) >= 1.4442 || fabs(photons[iq].p.Eta()) >= 1.4442) &&
+					if( ((fabs(photons[ip].p.Eta()) > 1.4442 || fabs(photons[iq].p.Eta()) > 1.4442) &&
 						lvTemp[comb].M() > 320.) ){
 							nEBEE++;
 							
@@ -501,29 +585,30 @@ Bool_t Histogrammer::Process(Long64_t entry)
 							selComb++;
 							Ncounts[1] ++;
 							
-						}
+					}
 					
 				}
 				//comb++; // all combinations (no need to count this)
 			}
 		}
 		
-		if(nEBEB && nEBEE){
+		if(nEBEB>0 && nEBEE>0){
 			Ncounts[2]++;
 			// this is rougly 1% of all events, 
 			// where more than one diphoton object fullfills the criteria
 			
-			//cout << Ncounts[2] << "\t nEBEB: " << nEBEB << " - nEBEE: " << nEBEE << endl;
 		}
 		
 		// at least one diphoton object passed the selection:
 		if(nEBEB>0 || nEBEE>0){
 			
+			Ncounts[4]++;
+			
 			bool	p1 = false,
 					p2 = false;
 			
 			// the index of the combination with the highest scalar sum of momenta:
-			int maxComb = distance(PSum, max_element(PSum, PSum+sizeNcounts));
+			int maxComb = distance(PSum, max_element(PSum, PSum + selComb));
 			
 			// the criteria have to be fullfilled for both photons individually
 			float alpha, A, kappa;
@@ -533,79 +618,119 @@ Bool_t Histogrammer::Process(Long64_t entry)
 			fIsoGammaCorr(fabs(selPhotons[maxComb]->p.Eta()), alpha, A, kappa);
 			isoGammaCorr = alpha + selPhotons[maxComb]->isoPhotonsEA - (*rho) * A - kappa * selPhotons[maxComb]->p.Pt();
 			if(	(fabs(selPhotons[maxComb]->p.Eta()) < 1.4442 &&
-				selPhotons[maxComb]->isoChargedHadronsEA > 5 &&
-				isoGammaCorr > 2.75 &&
-				selPhotons[maxComb]->hOverE > 5.0e-2 &&
-				selPhotons[maxComb]->sigmaIetaIeta > 0.0105)
+				selPhotons[maxComb]->isoChargedHadronsEA < 5 &&
+				isoGammaCorr < 2.75 &&
+				selPhotons[maxComb]->hOverE < 5.0e-2 &&
+				selPhotons[maxComb]->sigmaIetaIeta < 0.0105 &&
+				selPhotons[maxComb]->passElectronVeto)
 				||
 				(fabs(selPhotons[maxComb]->p.Eta()) > 1.566 &&
-				selPhotons[maxComb]->isoChargedHadronsEA > 5 &&
-				isoGammaCorr > 2.0 &&
-				selPhotons[maxComb]->hOverE > 5.0e-2 &&
-				selPhotons[maxComb]->sigmaIetaIeta > 0.028)
+				selPhotons[maxComb]->isoChargedHadronsEA < 5 &&
+				isoGammaCorr < 2.0 &&
+				selPhotons[maxComb]->hOverE < 5.0e-2 &&
+				selPhotons[maxComb]->sigmaIetaIeta < 0.028 &&
+				selPhotons[maxComb]->passElectronVeto)
 				){
+					Ncounts[5]++;
 					p1 = true;
 			}
 			// photon 2
 			fIsoGammaCorr(fabs(selPhotons2[maxComb]->p.Eta()), alpha, A, kappa);
 			isoGammaCorr = alpha + selPhotons2[maxComb]->isoPhotonsEA - (*rho) * A - kappa * selPhotons2[maxComb]->p.Pt();
 			if(	(fabs(selPhotons2[maxComb]->p.Eta()) < 1.4442 &&
-				selPhotons2[maxComb]->isoChargedHadronsEA > 5 &&
-				isoGammaCorr > 2.75 &&
-				selPhotons2[maxComb]->hOverE > 5.0e-2 &&
-				selPhotons2[maxComb]->sigmaIetaIeta > 0.0105)
+				selPhotons2[maxComb]->isoChargedHadronsEA < 5 &&
+				isoGammaCorr < 2.75 &&
+				selPhotons2[maxComb]->hOverE < 5.0e-2 &&
+				selPhotons2[maxComb]->sigmaIetaIeta < 0.0105 &&
+				selPhotons2[maxComb]->passElectronVeto)
 				||
 				(fabs(selPhotons2[maxComb]->p.Eta()) > 1.566 &&
-				selPhotons2[maxComb]->isoChargedHadronsEA > 5 &&
-				isoGammaCorr > 2.0 &&
-				selPhotons2[maxComb]->hOverE > 5.0e-2 &&
-				selPhotons2[maxComb]->sigmaIetaIeta > 0.028)
+				selPhotons2[maxComb]->isoChargedHadronsEA < 5 &&
+				isoGammaCorr < 2.0 &&
+				selPhotons2[maxComb]->hOverE < 5.0e-2 &&
+				selPhotons2[maxComb]->sigmaIetaIeta < 0.028 &&
+				selPhotons2[maxComb]->passElectronVeto)
 				){
+					Ncounts[6]++;
 					p2 = true;
 			}
 			
+			
+			
 			// now fill (if both pass the cuts)
 			if(p1 && p2){
+				// fill four vector
 				lvTemp[comb].SetVect(	selPhotons[maxComb]->p + 		selPhotons2[maxComb]->p);		// summed momentum
 				lvTemp[comb].SetE(		selPhotons[maxComb]->p.Mag() + 	selPhotons2[maxComb]->p.Mag());	// summed energy
+				
+				
 				
 				// EBEB or EBEE?
 				if(	fabs(selPhotons[maxComb]->p.Eta()) < 1.4442 && 
 					fabs(selPhotons2[maxComb]->p.Eta()) < 1.4442 ){ //EBEB
+						Ncounts[10]++;
 						hname = "diphoton_EBEB";
 						h[hname].Fill(lvTemp[comb].M());
-					}
+						
+						
+						// TH2F.Fill( x, y )
+						h2name = "diphoton_ht-EBEB";
+						h2[h2name].Fill(lvTemp[comb].M(), ht);
+						h2name = "diphoton_htstar-EBEB";
+						h2[h2name].Fill(lvTemp[comb].M(), htstar);
+						h2name = "diphoton_met-EBEB";
+						h2[h2name].Fill(lvTemp[comb].M(), met->p_raw.Mag());
+						
+/*						
+						if(lvTemp[comb].M() > 600.){
+							cout << Nnum << "\tEBEB" << "\tMass: " << lvTemp[comb].M() << "\tEventinfo: \t" <<  *runNo << ":" << *lumNo << ":" << *eventNo << endl;
+							
+							ofstream prot("eventsEBEB"+filename+".txt", ios::app); //append
+							if(prot.is_open()){
+								prot << *runNo << ":" << *lumNo << ":" << *eventNo << endl;
+								prot.close();
+							}
+							
+						}
+//*/
+				}
+					
+					
 					
 				if(	fabs(selPhotons[maxComb]->p.Eta()) >= 1.4442 || 
 					fabs(selPhotons2[maxComb]->p.Eta()) >= 1.4442 ){ //EBEE
+						Ncounts[11]++;
 						hname = "diphoton_EBEE";
 						h[hname].Fill(lvTemp[comb].M());
-					}
-				
-				
+						
+						
+						// TH2F.Fill( x, y )
+						h2name = "diphoton_ht-EBEE";
+						h2[h2name].Fill(lvTemp[comb].M(), ht);
+						h2name = "diphoton_htstar-EBEE";
+						h2[h2name].Fill(lvTemp[comb].M(), htstar);
+						h2name = "diphoton_met-EBEE";
+						h2[h2name].Fill(lvTemp[comb].M(), met->p_raw.Mag());
+						
+/*						
+						if(lvTemp[comb].M() > 600.){
+							cout << Nnum << "\tEBEE" << "\tMass: " << lvTemp[comb].M() << "\tEventinfo: \t" <<  *runNo << ":" << *lumNo << ":" << *eventNo << endl;
+							
+							ofstream prot("eventsEBEE"+filename+".txt", ios::app); //append
+							if(prot.is_open()){
+								prot << *runNo << ":" << *lumNo << ":" << *eventNo << endl;
+								prot.close();
+							}
+						}
+//*/
+				}
 				
 			}
 		}
 		
 		
-		
-		
-		
-		
-
-		
-		
-		
 	
 	} // if signalTrigger
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 // comment catcher */

@@ -1,6 +1,9 @@
 
-from ROOT import *
+#from ROOT import *
+import ROOT as rt
 from lib_plot import *
+from lib_filemanagement import *
+from lib_auxiliary import *
 from math import *
 from array import array
 
@@ -10,14 +13,20 @@ from array import array
 csize = 800
 
 
+def fitMassSpectrum(x, pars):
+	# diphoton spectrum function
+	return pow(x[0],pars[0]+pars[1]*log(x[0]))
+	
+
+
 def bw(x, pars):
 	# breit wigner
 	return pars[0]*1./(pow((pars[1]-x[0]),2) + pow((x[0]*pars[2]),2))
 	
 
 def fit_tool(h, f, c):
-	h.Scale(1./float(h.GetEntries()))
-	h.Fit(f)	
+	#h.Scale(1./float(h.GetEntries()))
+	h.Fit(f)
 	c.cd()
 	f.Draw("same")
 	
@@ -28,18 +37,8 @@ def fake_dep(fr, var):
 	pass
 
 
-
-
-# //////////////////////////////////////////////////////////////////////////////////////////////////
-# read data
-def getData(datatag, lines=6, lineoff = 0):
-	'''
-	parameter:
-		lines, gives the number of files written per run
-		lineoff, means the offset; by default zero, so it starts with the "latest" lines
-	'''
-	rebin = 1
-	
+def getDiphotonData(lines=2, lineoff=0):
+	# read out data
 	datakeys = {	"DYJetsToLL": 0,
 					"TTGJets": 2,
 					"WGToLNuG": 4,
@@ -47,13 +46,13 @@ def getData(datatag, lines=6, lineoff = 0):
 					"Run2015D-05Oct2015": 0,
 					"Run2015D-PromptReco": 1
 				}
-	defcolor = {	0: kGreen}
+	defcolor = {	0: rt.kGreen}
 	
 	# get number of lines from file:
 	total_lines = inputFileNumberOfLines()
 	h = {} #histograms
-	stacks = {} # thstacks
-	c = {} # canvases
+	
+	h2 = {} # 2d histograms
 	
 	# read the files:
 	for ll in range(total_lines-lineoff-lines+1,total_lines-lineoff+1):
@@ -64,324 +63,254 @@ def getData(datatag, lines=6, lineoff = 0):
 				hname = key
 		#print hname
 		h[hname] = {}
+		h2[hname] = {}
 		try:
-			data = TFile(strInputFile)
+			data = rt.TFile(strInputFile)
 		except:
-			return False		
-		# loop all histograms and search for raw ones
+			return False
+		
+		# loop all histograms and search for EBEB and EBEE
 		for key in data.GetListOfKeys():
 			kgn = key.GetName()
-			if datatag in kgn:
+			# search for the datatag
+			if "_EB" in kgn:
 				#print type(data.Get(kgn))
 				h[hname][kgn] = data.Get(kgn)
 				h[hname][kgn].SetDirectory(0)
+			if "-EB" in kgn:
+				h2[hname][kgn] = data.Get(kgn)
+				h2[hname][kgn].SetDirectory(0)
 			
 		
-		stacks = dict.fromkeys(h[hname].keys()) # THStack for mc
+		data.Close()
 	
-	l = dict.fromkeys(stacks.keys()) # legends
-	dh = dict.fromkeys(stacks.keys()) # data histogram(s)
-	added_data = dict.fromkeys(stacks.keys())
-		
-	#initialize stacks with THStacks:
-	for key in stacks.keys():
-		stacks[key] = THStack()
-		l[key] = TLegend(0.9,0.7,0.65,0.9)
-		dh[key] = {}
-		
-	
-	
-	cstyle = ""
-	
-	# scale montecarlo samples and add to stack
-	for key in h.keys():
-		if "Run2015" not in key:
-			sf = giveMClumiScalefactor(key)
-			for his in h[key].keys():
-				#print key, his
-				h[key][his].Scale(sf)
-				h[key][his].Rebin(rebin)
-				h[key][his].SetFillColor(defcolor[0]+datakeys[key])
-				h[key][his].SetLineColor(defcolor[0]+datakeys[key])
-				l[his].AddEntry(h[key][his], key)
-				stacks[his].Add(h[key][his])
-		
-		if "Run2015D-05Oct2015" in key:
-			for his in h[key].keys():
-				h[key][his].Rebin(rebin)
-				dh[his][key] = h[key][his]
-				#dh[his][key].SetFillColor(kBlack)
-				dh[his][key].SetMarkerStyle(20) # full square
-				dh[his][key].SetMarkerColor(kBlack)
-				l[his].AddEntry(h[key][his], key)
-				#print "key, his: ", key, his
-				#print "his, key: ", his, key
-		
-		
-		if "Run2015D-PromptReco" in key:
-			for his in h[key].keys():
-				h[key][his].Rebin(rebin)
-				dh[his][key] = h[key][his]
-				
-	
-	# add reco and prompt reco
-	for key in dh.keys():
-		dh[key]["Run2015D-05Oct2015"].Add(dh[key]["Run2015D-PromptReco"])
-	
-	
-	return h, stacks, dh, l
-
+	return h, h2
 
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
-
-def getData2d(datatag, lines=6, lineoff = 0):
-	'''
-	reads out 2d histograms
-	'''
+# plot mass spectrum
+def massSpectrum(lines=2, lineoff=0):
+	print sys.argv
+	nrebin = 20
+	
+	# read out data
+	h, h2 = getDiphotonData(lines, lineoff)
 	
 	
-	datakeys = {	"DYJetsToLL": 0,
-					"TTGJets": 2,
-					"WGToLNuG": 4,
-					"ZGTo2LG": 6,
-					"Run2015D-05Oct2015": 0,
-					"Run2015D-PromptReco": 1
-				}
-	defcolor = {	0: kGreen}
+	# 1d:
+	hEBEB = rt.TH1F("EBEB",";m [GeV];counts",2100,0,2100)
+	hEBEE = rt.TH1F("EBEE",";m [GeV];counts",2100,0,2100)
 	
-	# get number of lines from file:
-	total_lines = inputFileNumberOfLines()
-	h = {} #histograms
-	stacks = {} # thstacks
-	c = {} # canvases
-	
-		# read the files:
-	for ll in range(total_lines-lineoff-lines+1,total_lines-lineoff+1):
-		# filename
-		strInputFile = inputFile(ll)
-		print "dataset: ", strInputFile
-		for key in datakeys:
-			if(key in strInputFile):
-				hname = key
-		#print hname
-		h[hname] = {}
-		try:
-			data = TFile(strInputFile)
-		except:
-			return False		
-		# loop all histograms and search for raw ones
-		for key in data.GetListOfKeys():
-			kgn = key.GetName()
-			if datatag in kgn:
-				#print type(data.Get(kgn))
-				h[hname][kgn] = data.Get(kgn)
-				h[hname][kgn].SetDirectory(0)
-			
-		
-		stacks = dict.fromkeys(h[hname].keys()) # THStack for mc
-	
-	l = dict.fromkeys(stacks.keys()) # legends
-	dh = dict.fromkeys(stacks.keys()) # data histogram(s)
-	
-	
-		#initialize stacks with THStacks:
-	for key in stacks.keys():
-		stacks[key] = THStack()
-		l[key] = TLegend(0.9,0.7,0.65,0.9)
-		dh[key] = {}
-		
-	
-	
-	cstyle = ""
-	
-	# scale montecarlo samples and add to stack
+	# add up both
 	for key in h.keys():
-		if "Run2015" not in key:
-			sf = giveMClumiScalefactor(key)
-			for his in h[key].keys():
-				#print key, his
-				h[key][his].Scale(sf)
-				#h[key][his].Rebin(rebin)
-				h[key][his].SetFillColor(defcolor[0]+datakeys[key])
-				h[key][his].SetLineColor(defcolor[0]+datakeys[key])
-				l[his].AddEntry(h[key][his], key)
-				stacks[his].Add(h[key][his])
+		for qkey in h[key].keys():
+			if "_EBEB" in qkey:
+				hEBEB.Add(h[key][qkey])
+			if "_EBEE" in qkey:
+				hEBEE.Add(h[key][qkey])
+	
+	# 1d
+	print "start binning plots:"
+	for i in [5,10,12,14,15,16,18,20,22,24,25,26,28,30,32,34,35,36,38,40,45,50]:
+		print "binwidth: ", i
+		#plotterDiphoton(hEBEB, hEBEE, i)
+	
+	
+	# handle 2d histograms
+	hEBEBmet = rt.TH2F("metEBEB_bins",";m [GeV];met< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	hEBEBht = rt.TH2F("htEBEB_bins",";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						2000,0,2000)
+	hEBEEmet = rt.TH2F("metEBEE_bins",";m [GeV];met< [GeV]",
+						2100,0,2100,
+						2000,0,2000);
+	hEBEEht = rt.TH2F("htEBEE_bins",";m [GeV];Ht< [GeV]",
+						2100,0,2100,
+						2000,0,2000)
+	
+	for key in h2.keys():
+		for qkey in h2[key].keys():
+			#print h2[key][qkey]
+			if "met-EBEB" in qkey:
+				#print "met added!"
+				hEBEBmet.Add(h2[key][qkey])
+			if "ht-EBEB" in qkey:
+				hEBEBht.Add(h2[key][qkey])
+			if "met-EBEE" in qkey:
+				hEBEEmet.Add(h2[key][qkey])
+			if "ht-EBEE" in qkey:
+				hEBEEht.Add(h2[key][qkey])
+	
+	# projection to TH1:
+	# ProjectionX (const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") 
+	hEBEBmetPx = {} # collections for different met and ht cuts
+	hEBEBhtPx = {} # -"-
+	hEBEEmetPx = {} # -"-
+	hEBEEhtPx = {} # -"-
+	
+	
+	
+	# met:
+	print "start met plots: "
+	for met in range(0,201, 20):
+		print "met cut: ", met
+		hEBEBmetPx[met] = hEBEBmet.ProjectionX("MetEBEB_"+str(met), 0, met)
+		hEBEEmetPx[met] = hEBEEmet.ProjectionX("MetEBEE_"+str(met), 0, met)
+	
+	plotterDiphoton(hEBEBmetPx[met], hEBEEmetPx[met])
+	
+	# ht:
+	print "start ht plots: "
+	for ht in range(0, 1001, 50):
+		print "ht cut: ", ht
+		hEBEBhtPx[ht] = hEBEBht.ProjectionX("HtEBEB_"+str(ht), 0, ht)
+		hEBEEhtPx[ht] = hEBEEht.ProjectionX("HtEBEE_"+str(ht), 0, ht)
+	
+	plotterDiphoton(hEBEBhtPx[ht], hEBEEhtPx[ht])
+	
+	#print "hEBEBmetPx[100] : ",hEBEBmetPx[100].GetName()
+	#print "hEBEEmetPx[100] : ",hEBEEmetPx[100].GetName()
+	
+	# 2d projections:
+	#for met in range(0,201, 20):
 		
-		if "Run2015D-05Oct2015" in key:
-			for his in h[key].keys():
-				#h[key][his].Rebin(rebin)
-				dh[his][key] = h[key][his]
-				#dh[his][key].SetFillColor(kBlack)
-				dh[his][key].SetMarkerStyle(20) # full square
-				dh[his][key].SetMarkerColor(kBlack)
-				l[his].AddEntry(h[key][his], key)
-				#print "key, his: ", key, his
-				#print "his, key: ", his, key
+	
+	#for ht in range(0, 1001, 50):
 		
-		
-		if "Run2015D-PromptReco" in key:
-			for his in h[key].keys():
-				#h[key][his].Rebin(rebin)
-				dh[his][key] = h[key][his]
-				
-	
-	for key in dh.keys():
-		dh[key]["Run2015D-05Oct2015"].Add(dh[key]["Run2015D-PromptReco"])
-	
-	
-	return h, stacks, dh, l
-
-
-
-
-
-# //////////////////////////////////////////////////////////////////////////////////////////////////
-def fakerate(datatag, lines=6, lineoff = 0):
-	
-	h, stacks, dh, l = getData2d(datatag, lines, lineoff)
-	
-	cwidth = 800
-	cheight = 800
-	
-	# integrate this range (around the z peak)
-	rmin = 80
-	rmax = 100
-	
-	datastr = "Run2015D-05Oct2015"
-	#datastr = "DYJetsToLL"
-	
-	hdata = {}
-	hproj = {} # projection histograms
-	ct = {} # canvases
-	
-	htemp = 0
-	hw = 0
-	
-	print h.keys()
-	
-	#print h["Run2015D-05Oct2015"]
-	
-	for key in h[datastr].keys():
-		if "etag" not in key:
-			hdata[key] = h[datastr][key]
-			
-	
-	# ProjectionX (const char *name="_px", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="")
-	for key in hdata.keys():
-		#print key
-		ymax = hdata[key].GetNbinsY()
-		hproj[key] = TH1F(key,key+";;",ymax,0,ymax)
-		for i in range(0,ymax):
-			j = i+1
-			htemp = hdata[key].ProjectionX(key+str(j),j,j)
-			hw = htemp.Integral(rmin, rmax)
-			for filler in range(1,int(hw+1)):
-				hproj[key].Fill(i)
-		
-		#ct[key] = TCanvas(key, key, cwidth, cheight)
-		#hproj[key].Draw("hist")
-		
-		#print hdata[key].ProjectionX(key,3,3)
-	
-	# rebin the pt histogram
-	for key in hproj.keys():
-		if "pt" in key:
-			hproj[key].Rebin(5)
 	
 	
 	
-	#  efficiencies
-	heff = {	"pt": 0,
-				"nvtx": 0,
-				"njet": 0
-			}
-	
-	funcs = {	"pt": TF1("pt","[0]+[1]/x+[2]/x",20,200),
-				"nvtx": TF1("nvtx","[0]+[1]*x",0,25),
-				"njet": TF1("njet","[0]+[1]*x",2,7)
-			}
-	
-	
-	for key in heff.keys():
-		#print "heff.key: ", key
-		heff[key] = Eff(key)
-		for pkey in hproj.keys():
-			#print "pkey: ", pkey
-			if key in pkey:
-				#print "hproj.key: ",pkey
-				if "tot" in pkey:
-					heff[key].addTotal(hproj[pkey])
-				if "pas" in pkey:
-					heff[key].addPassed(hproj[pkey])
-				else:
-					print "nope"
-		
-		#if key == "pt":
-		#	heff[key].
-		
-		heff[key].fit(funcs[key])
-		heff[key].Canvas()
-		#heff[key] = Eff(key)
-		#heff[key].Canvas()
-		#ct[key] = TCanvas(key, key, cwidth, cheight)
-		#ct[key].cd()
-		#heff[key].Graph().Draw("ap")
-		#ct[key].cd()
-	
-	
-	
-	
-	
+	print "... massSpectrum() done"
 	raw_input()
 	
+	return 0
+
+
+def plotterDiphoton(hEBEB, hEBEE, *args):
+	# needs two histograms
+	
+	#print "hEBEB: ", hEBEB.GetName()
+	#print "hEBEE: ", hEBEE.GetName()
+	
+		# draw and fit:
+	maxvalue = 1990 # for both
+	
+	binEB = 20 # standard binning: events per 20 GeV
+	
+	if len(sys.argv) > 1:
+		binEB = int(sys.argv[1])
+	if len(args) > 0:
+		binEB = args[0]
+	
+	binEE = binEB
+	
+	# EBEB
+	fmin = 230
+	
+	fmax = maxValFromBinwidth(fmin,maxvalue,binEB)
+	
+	hEBEB = rebin(hEBEB, range(fmin,fmax+1,binEB))
+	hEBEB.GetXaxis().SetRangeUser(fmin, fmax)
+	
+	hEBEBc = CumulativePlot(hEBEB, "down")
+	
+	
+	f1 = rt.TF1("f1",fitMassSpectrum,fmin,fmax,2)
+	f1.SetParameters(10,-1.)
+	hEBEB.Fit(f1, "0")
+	
+	
+	#print "cumulative:"
+	#hc = CumulativePlot(hEBEB, "down")
+	#ctest = TCanvas("ctest","ctest",800,800)
+	#ctest.SetLogx()
+	#ctest.SetLogy()
+	#ctest.cd()
+	#hc.Draw("hist")
+	#hEBEB.Draw("same ep")
+	#print "// cumulative"
+	
+	# '''
+	
+	
+	'''
+	print "__EBEB"
+	for binwidth in range(10, 41, 2):
+		fmax = maxValFromBinwidth(fmin,maxvalue,binwidth)
+		print fmax
+		binWidthPlot(hEBEB,"EBEB",binwidth,fmin,fmax)
+		raw_input()
+	
+	# '''
+	
+	# EBEE
+	# 
+	fmin = 330
+	
+	fmax = maxValFromBinwidth(fmin,maxvalue,binEB)
+	
+	hEBEE = rebin(hEBEE, range(fmin,fmax+1,binEE))
+	hEBEE.GetXaxis().SetRangeUser(fmin, fmax)
+	
+	hEBEEc = CumulativePlot(hEBEE, "down")
+	
+	f2 = rt.TF1("f2",fitMassSpectrum,fmin,fmax,2)
+	f2.SetParameters(10.,-1.)
+	hEBEE.Fit(f2, "0")
+	# '''
+	
+	'''
+	print "__EBEE"
+	for binwidth in range(10, 41, 2):
+		fmax = maxValFromBinwidth(fmin,maxvalue,binwidth)
+		print fmax
+		#binWidthPlot(hEBEE,"EBEE",binwidth,fmin,fmax)
+	
+	# '''
+	
+	# cumulative plots for the fit model
+	hf1 = CumulativePlot(createHistoFromFunction(f1, hEBEBc), "down")
+	hf2 = CumulativePlot(createHistoFromFunction(f2, hEBEEc), "down")
+	
+	#create canvases with ratio plots
+	rEBEB = canvasCreator(hEBEB, f1, hEBEB.GetName()+"_bin"+str(binEB))
+	rEBEE = canvasCreator(hEBEE, f2, hEBEE.GetName()+"_bin"+str(binEE))
+	
+	rEBEB.draw()
+	rEBEB.addHisto(hEBEBc, hf1)
+	
+	rEBEE.draw()
+	rEBEE.addHisto(hEBEEc, hf2)
+	# '''
 	
 	
 
+def binWidthPlot(h,name,b,fmin,fmax):
+	#
+	htemp = rebin(h, range(fmin,fmax+1,b))
+	htemp.GetXaxis().SetRangeUser(fmin, fmax)
+	f = rt.TF1("f_"+name+str(b),fitMassSpectrum,fmin,fmax,2)
+	f.SetParameters(10,-1.)
+	htemp.Fit(f, "0")
+	r = canvasCreator(htemp, f, name+"_bin"+str(b))
+	r.draw()
+	return 0
 
 
-
-# //////////////////////////////////////////////////////////////////////////////////////////////////
-def rawplot(datatag,lines=6):
+def maxValFromBinwidth(start,maximum,binwidth):
+	# returns the maximum value where to go
+	n = float(maximum-start)/float(binwidth)
+	n = int(n)
+	return start+binwidth*n
 	
-	h, stacks, dh, l = getData(datatag,lines)
-	
-	myc = {}
-	
-	for key in stacks:
-		print "key: ", key
-		#print "key in stacks: ", key
-		myc[key] = myCanvas(key)
-		myc[key].addData(dh[key]["Run2015D-05Oct2015"])
-		myc[key].addMC(stacks[key])
-		#myc[key].xmin = 70
-		#myc[key].xmax = 110
-		myc[key].createCanvas(l[key])
-		
-		#c[key] = TCanvas(key,key,csize,csize)
-		#dh[key]["Run2015D-05Oct2015"].Draw("ep")
-		#stacks[key].Draw("same hist")
-		#dh[key]["Run2015D-05Oct2015"].Draw("same ep")
-		#l[key].Draw()
-	
-	print myc.keys()
-	
-	#myList = TList()
-	#for key in c.keys():
-	#	myList.Add(myc[key].getCanvas())
-	
-	#strMyFile = GiveOutputString(strInputFile)
-	#print 'output: ',strMyFile
-	
-	#myFile = TFile(strMyFile,"RECREATE")
-	#gFile.WriteObject(myList,"list")	
-	print "hallo"
-	
-	raw_input()
 
 
-
+def canvasCreator(h, f, name):
+	r = ratioCanvasHF(h,f,name)
+	return r
 
 
 # //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -394,92 +323,19 @@ def main():
 	else:
 		print("file_dates.txt failed")
 	
-	#gROOT.SetBatch(kTRUE)	# dont show the canvases
-	
-	c = {}		# canvases
-	#csize = 700
-	
-	hnumber = 0
-	hnames = {}	# names of the histograms
-	
-	hnameplot = {}	# 
-	h = {}		# histograms 
-	h2 = {}		# 2d histograms
-	h2p = {}	# projected histograms
-	
-	#temph2 = 0
-	
-	#print sys.argv
+	rt.gROOT.SetBatch(rt.kTRUE)	# dont show the canvases
 	
 	
-	#rawplot("rawdata",6)
+	print sys.argv
 	
-	#rawplot("diphotonraw",6)
 	
-	b = 0
-	
-	#rawplot("diphotonZpeak",6)
-	
-	fakerate("fZmass_h2_", 6)
+	# 
+	massSpectrum()
 	
 	
 	
-	
-	"""
-	
-	strInputFile = inputFile() # get latest created file
-	
-	print "input: ", strInputFile
-	
-	try:
-		data = TFile(strInputFile)
-		print "file successfully loaded"
-	except:
-		print "file load failed"
-		sys.exit(0)
-	
-	for key in data.GetListOfKeys(): # loop all keys
-		hnames[hnumber] = key.GetName()
-		#print hnames[hnumber]
-		c[hnumber] = TCanvas("c"+str(hnumber),hnames[hnumber],csize,csize)
-		
-		if "rawdata" in hnames[hnumber]:
-			
-		
-		
-		if "h2" in hnames[hnumber]:			
-			print hnames[hnumber], hnumber
-			h2[temph2] = data.Get(key.GetName())
-			h2[temph2].Draw("colz")
-			temph2 += 1
-		
-		hnumber += 1
-	
-	
-	
-	for k in range(0,temph2):
-		
-		
-	
-	
-	myList = TList()
-	for key in c.keys():
-		myList.Add(c[key])
-	
-	strMyFile = GiveOutputString(strInputFile)
-	print 'output: ',strMyFile
-	
-	myFile = TFile(strMyFile,"RECREATE")
-	gFile.WriteObject(myList,"list")	
-	
-	end_ = datetime.datetime.now()
-	print "runtime: ", end_ - _start
-	
-	#"""
 
 
-
-	# sdf
 
 
 if __name__ == "__main__":

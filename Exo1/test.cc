@@ -14,6 +14,17 @@ void vectors(){
 		lvTemp[i].SetPxPyPzE(0.,0.,0.,0.);
 	}
 	
+	
+	
+	vector<float> vec;
+	cout << vec.size() << endl;
+	
+	for(int i=0;i<5;i++){
+		vec.push_back(i*i);
+	}
+	cout << vec.size() << endl;
+	cout << vec[5] << endl;
+	
 }
 
 void strings(){
@@ -24,6 +35,8 @@ void strings(){
 	cout << string::npos << endl;
 	
 }
+
+
 
 
 
@@ -72,18 +85,47 @@ void byreference(){
 	
 }
 
+void modulos(){
+	
+	int N=10;
+	
+	cout << N/5 << endl;
+	cout << N % 5 << endl;
+	cout << N % 10 << endl;
+	cout << N % 3 << endl;
+	
+	
+}
+
+void logics(){
+	
+	int a = 0;
+	int b = 1;
+	int c = 2;
+	int d = 4;
+	
+	if(a) cout << "a" << endl;
+	if(b) cout << "b" << endl;
+	if(c) cout << "c" << endl;
+	if(d) cout << "d" << endl;
+	
+	if(a>0 && b>0) cout << "ab" << endl;
+	if(a>0 || d>0) cout << "ad" << endl;
+	
+}
 
 
 void test(){
+	double start_time = time(NULL); // measure running time
 	
 	
 	//arrays();
-	byreference();
-	
-	
-	cout << "done" << endl;
-	
+	//byreference();
+	//logics();
+	//vectors();
 	
 	
 	
+	double end_time = 1.*( time(NULL));
+	cout << "... runtime ~" << (end_time - start_time)/1. << " sec." << endl;
 } // void test
