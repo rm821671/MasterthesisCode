@@ -60,9 +60,7 @@ class HistoCollection(object):
 		# using their integral and returns a list with the correct order
 		pass
 	
-	
-	
-	
+
 
 
 
@@ -116,7 +114,7 @@ class myCanvas(object):
 		self.pad1.Draw()
 		self.pad1.cd()
 		
-
+		
 		
 		if(self.data.GetMaximum() > self.mc.GetMaximum()):
 			print "data>mc"
