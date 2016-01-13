@@ -407,6 +407,23 @@ def dictionaries():
 	print a
 
 
+def systemtest():
+	
+	import platform
+	
+	print platform.dist()
+	print platform.linux_distribution()
+	
+	print os.name
+	
+	print sys.platform
+	
+	print platform.system()
+	
+	print platform.release()
+	
+
+
 def main():
 	
 	print sys.argv
@@ -420,12 +437,16 @@ def main():
 	#lists()
 	#generators()
 	
-	frametest()
+	#frametest()
 	
-	parseaxis()
+	#parseaxis()
 	
 	
-	dictionaries()
+	#dictionaries()
+	
+	systemtest()
+	
+	
 	
 	return 0
 
