@@ -3,6 +3,7 @@
 
 # file and data management methods
 
+import ROOT as rt
 import numpy as np
 import datetime
 import calendar
@@ -11,6 +12,36 @@ import os
 from array import array
 
 
+
+class FileSaver():
+	'''
+	
+	'''
+	def __init__(self, filename, treepath, *args):
+		# args:
+		# 0: text plotted
+		# 1:
+		 
+		self.filename = filename # 
+		self.treepath = treepath # e.g. 'HtBins'
+		
+		
+	
+	
+	def save(self, obj, name):
+		name = self.treepath+'/'+name
+		if isinstance(obj, rt.TCanvas):
+			obj.Update()
+			
+		
+		f = rt.TFile(self.filename, "update")
+		f.cd()
+		
+		
+		
+		
+		
+	
 
 
 

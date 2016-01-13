@@ -5,6 +5,8 @@ import sys
 #sys.path.insert(0,"../../py")
 
 from modules import lib_plot as lp
+from modules import auxiliary as aux
+from modules import filemanager as fm
 
 
 
@@ -30,6 +32,11 @@ from modules import lib_plot as lp
 def main():
 	
 	print sys.argv
+	
+	
+	
+	
+	# 
 	
 
 if __name__ == '__main__':

@@ -15,7 +15,7 @@ import subprocess as sp
 
 import inspect as ins
 
-from modules import lib_plot as lp
+#from modules import lib_plot as lp
 
 # ptest.py
 
@@ -346,8 +346,65 @@ def frametest():
 	print "path: ",path
 	print "absolut file: ",absfile
 	
-	
 
+
+
+
+
+def parseaxis():
+	
+	"""
+	parses the axis titles of both axes:
+	* quantities with units
+	* y-axis: BIN->' / <binwidth>'
+	"""
+	
+	# parse qunatities with units
+	xt='p_{T} [GeV]'
+	yt='H_{T}^{gen} [GeV] BIN'
+	
+	
+	# parse y-axis
+	if "BIN" in yt:
+		# find bin-width
+		binwidth="%g"%5
+		# binwidth="%g"%xax.GetBinWidth(1)
+	
+		# check if x-axis has a unit
+		import re
+		pattern = re.compile('\[.*\]')
+		unit = pattern.findall(xt)
+		if unit:
+			assert(len(unit)==1) # not two units
+			unit=" "+unit[0][1:-1] # extract unit between [...]
+		else:
+			unit=' units' # dimensionless
+		binwidth+=unit
+		yt=yt.replace("BIN"," / %s"%binwidth)
+	
+	print pattern
+	print xt
+	print yt
+
+
+
+class mydict(dict):
+	def add(self,key,val):
+		self[key] = val
+
+def dictionaries():
+	
+	k = None
+	
+	if k is None:
+		print "k!"
+	if k is not None:
+		print "no k!"
+	
+	
+	a = mydict()
+	a.add("first", "hallo")
+	print a
 
 
 def main():
@@ -365,7 +422,10 @@ def main():
 	
 	frametest()
 	
+	parseaxis()
 	
+	
+	dictionaries()
 	
 	return 0
 

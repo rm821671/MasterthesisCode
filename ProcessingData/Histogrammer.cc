@@ -768,22 +768,22 @@ void Histogrammer::resetSelection() {
 		Htjets=0.;
 		Etemp1=0.;
 		Etemp2=0.;
-
+		
 		oneHasNoPixelSeed = false;	// set this TRUE if one has NO pixelseed and
 						// therefore seems to be a "real" photon
-
+		
 		//TagElectron = false;
 		
 		vTemp1.SetXYZ(0.,0.,0.);				// temp vector
 		vTemp2.SetXYZ(0.,0.,0.);				// temp vector
 		vTemp3.SetXYZ(0.,0.,0.);				// temp vector
 		vTemp4.SetXYZ(0.,0.,0.);				// temp vector
-
+		
 		lvTemp1.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
 		lvTemp2.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
 		lvTemp3.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
 		lvTemp4.SetPxPyPzE(0.,0.,0.,0.);		// temp lorentzvector
-
+		
 		vec_lvTemp1.clear();	// clear lvectors of lorentzvectors
 		vec_lvTemp2.clear();
 		vec_lvTemp3.clear();
@@ -869,7 +869,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	string numstr;
 	string hname;
 	string h2name;
-	
+	sdf
 	resetSelection();	
 	fReader.SetEntry(entry);	// fReader points on current entry
 	
@@ -914,7 +914,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // raw data
-
+	
 	
 	
 	int numberPhoton40 = 0;
@@ -935,6 +935,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	for(auto& j: jets){
 		h[hname].Fill(j.p.Pt(), selW);
 	}
+	
 	
 	
 	if(photons.GetSize() == 2 && numberPhoton40 >= 2 && *TriggerR9Id85){
@@ -969,7 +970,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 
 
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // use 2d histograms
 
 /*
@@ -995,9 +996,6 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	
 	bool	tag1 = false, probe1 = false,
 			tag2 = false, probe2 = false;
-	
-	
-	
 	
 	
 	resetSelection();
@@ -1026,7 +1024,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 			// tag loop
 			for(auto& p: photons){
 				nPhoton += 1;
-					
+					cd
 					for(auto& e: electrons){
 						h2name = "h2_2e2g_delR";
 						hname = "h_2e2g_delR";

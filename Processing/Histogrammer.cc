@@ -96,7 +96,7 @@ string getOutputFilename( string strIn ) {
   string outputName;
   
   if( PosEnd != string::npos ) {
-    outputName = "../selector_rootFiles/my_selector_results_" + 
+    outputName = "/user/rmeyer/Dropbox/data_uni/root_selectorFiles/my_selector_results_" + 
     				strIn.substr( PosStart+1, PosEnd-PosStart-1 ) + 
     				"_" + 
     				NumberToString(time(0)) +
@@ -316,8 +316,35 @@ void Histogrammer::initSelection( string const& s ) {
 	
 	
 	
+	h2name = "zpeak_tot_pt";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];pt [GeV]",
+						200,0,200,
+						250,0,250);
 	
+	h2name = "zpeak_pas_pt";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];pt [GeV]",
+						200,0,200,
+						250,0,250);
 	
+	h2name = "zpeak_tot_nvtx";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];N_{vtx}",
+						200,0,200,
+						60,0,60);
+
+	h2name = "zpeak_pas_nvtx";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];N_{vtx}",
+						200,0,200,
+						60,0,60);
+
+	h2name = "zpeak_tot_njet";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];N_{jet}",
+						200,0,200,
+						15,0,15);
+
+	h2name = "zpeak_pas_njet";
+	h2[h2name] = TH2F((h2name + "_" + s).c_str(),";m [GeV];N_{jet}",
+						200,0,200,
+						15,0,15);
 	
 	
 	
@@ -459,7 +486,7 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	//if(Nnum > 100000) return kTRUE;
 	
 	// counter output
-	//if((Nnum % 100000) == 0) cout << "event \t" << Nnum << "\t done..."  << endl;
+	if((Nnum % 100000) == 0) cout << "event " << Nnum << " done...   -";
 	
 	
 	
@@ -481,18 +508,93 @@ Bool_t Histogrammer::Process(Long64_t entry)
 	}
 */
 	
-	
+	int ph = 0,
+		_c = 0;
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	//
 	// Tag and Probe Method
 	//  
-	// diphoton events
+	// calculate four vector of all photon objects
+	for(auto& p: photons){
+		vTemp[_c] = vTemp[_c] + p.p;
+		Etemp[_c] += p.p.Mag();
+	}
+	
+	lvTemp[_c].SetVect(vTemp[_c]);
+	lvTemp[_c].SetE(Etemp[_c]);
+	
+	// events with trigger and two photon objects
 	if(*TriggerR9Id85 && electrons.GetSize() == 2){
 		Ncounts[0] ++;
 		
 		// tag:
+		if(	photons[ph].p.Pt() > 25 && 
+			photons[ph].hasPixelSeed && 
+			fabs(photons[ph].p.Eta()) < 1.4442){
+				
+				// probe
+				ph = 1;
+				if(	photons[ph].p.Pt() > 10 && 
+					fabs(photons[ph].p.Eta()) < 1.4442){
+						
+						// FILL TOTAL
+						h2name = "zpeak_tot_pt";
+						h2[h2name].Fill(lvTemp[_c].M(), photons[ph].p.Pt(), selW);
+						h2name = "zpeak_tot_nvtx";
+						h2[h2name].Fill(lvTemp[_c].M(), *nGoodVertices, selW);
+						h2name = "zpeak_tot_njet";
+						h2[h2name].Fill(lvTemp[_c].M(), jets.GetSize(), selW);
+						
+						
+					if(!photons[ph].hasPixelSeed){
+						// FILL PASSED
+						h2name = "zpeak_pas_pt";
+						h2[h2name].Fill(lvTemp[_c].M(), photons[ph].p.Pt(), selW);
+						h2name = "zpeak_pas_nvtx";
+						h2[h2name].Fill(lvTemp[_c].M(), *nGoodVertices, selW);
+						h2name = "zpeak_pas_njet";
+						h2[h2name].Fill(lvTemp[_c].M(), jets.GetSize(), selW);
+
+					}
+					
+				}
+				
+		}
 		
-		
+		ph = 1; // change photons
+		// tag:
+		if(	photons[ph].p.Pt() > 25 && 
+			photons[ph].hasPixelSeed && 
+			fabs(photons[ph].p.Eta()) < 1.4442){
+				
+				// probe
+				ph = 0;
+				if(	photons[ph].p.Pt() > 10 && 
+					fabs(photons[ph].p.Eta()) < 1.4442){
+						
+						// FILL TOTAL
+						h2name = "zpeak_tot_pt";
+						h2[h2name].Fill(lvTemp[_c].M(), photons[ph].p.Pt(), selW);
+						h2name = "zpeak_tot_nvtx";
+						h2[h2name].Fill(lvTemp[_c].M(), *nGoodVertices, selW);
+						h2name = "zpeak_tot_njet";
+						h2[h2name].Fill(lvTemp[_c].M(), jets.GetSize(), selW);
+						
+						
+					if(!photons[ph].hasPixelSeed){
+						// FILL PASSED
+						h2name = "zpeak_pas_pt";
+						h2[h2name].Fill(lvTemp[_c].M(), photons[ph].p.Pt(), selW);
+						h2name = "zpeak_pas_nvtx";
+						h2[h2name].Fill(lvTemp[_c].M(), *nGoodVertices, selW);
+						h2name = "zpeak_pas_njet";
+						h2[h2name].Fill(lvTemp[_c].M(), jets.GetSize(), selW);
+
+					}
+					
+				}
+				
+		}
 		
 		
 		
@@ -621,7 +723,8 @@ void Histogrammer::Terminate()
 	}
 	
 	// publish filename
-	ofstream myFile("outputfiles.txt", ios::app); // append
+	ofstream myFile("/user/rmeyer/Dropbox/data_uni/root_selectorFiles/outputfiles.txt", 
+					ios::app); // append
 	if(myFile.is_open()){
 		myFile << outputName << endl;
 		myFile.close();

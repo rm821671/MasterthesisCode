@@ -315,7 +315,6 @@ void Histogrammer::initSelection( string const& s ) {
 	hname = "diphoton_EBEE";
 	h[hname] = TH1F((hname+"_"+s).c_str(),";m [GeV];counts",2100,0,2100);
 	
-	
 	// TH2F (const char *name, const char *title, 
 	//	Int_t nbinsx, Double_t xlow, Double_t xup, 
 	//	Int_t nbinsy, Double_t ylow, Double_t yup)
@@ -349,7 +348,6 @@ void Histogrammer::initSelection( string const& s ) {
 	h2[h2name] = TH2F((h2name+"_"+s).c_str(),";m [GeV];met< [GeV]",
 						2100,0,2100,
 						2000,0,2000);
-	
 	
 	// not used:
 	h2name = "Ntrk_Pt_plane";
